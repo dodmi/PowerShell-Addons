@@ -4,9 +4,10 @@ The PowerShell modules provide command completion for classic executables in Pow
 
 ## How to use these files?
 - Run `$env:PSModulePath` in PowerShell
-- Place the file in one of the script locations in a sub folder named `SSH-TABComplete`
-- Run `import-module SSH-TABComplete` (to get this permanently, add the line to your `$profile`)
-- Now you should have tab completion for ssh parameters (enter `ssh <TAB>` or `ssh <Ctrl+Space>`)
+- Place the files in one of the module locations in a sub folder named `TABCompletion`
+- Run `import-module TABCompletion` (to get this permanently, add the line to your `$profile`)
+- The module TABCompletion is a wrapper, that will load any module named `*-TABComplete.psm1` in the same folder
+- Now you should have tab completion for ssh and openssl parameters (enter `ssh <TAB>` or `ssh <Ctrl+Space>`)
 
 ## SSH
 SSH-TABComplete.psm1 supports command completion for SSH parameters and known hosts, e.g. hosts in the known_hosts file (the hosts, you've public keys for) and your SSH config

@@ -4,13 +4,13 @@ This is a PowerShell module providing TAB completion for the native ssh command
 
 How to use this file alone?
 - Run $env:PSModulePath in PowerShell
-- Place this file in one of the script locations in a sub folder named SSH-TABComplete
+- Place this file in one of the module locations in a sub folder named SSH-TABComplete
 - Run import-module SSH-TABComplete (to get this permanently, add the line to your $profile)
 - Now you should have tab completion for ssh parameters (enter ssh <TAB> or ssh <Ctrl+Space>)
 
 How to use this file in the bundle?
 - Run $env:PSModulePath in PowerShell
-- Place this file and the file TABCompletion.psm1 in one of the script locations in a sub folder named TABCompletion
+- Place this file and the file TABCompletion.psm1 in one of the module locations in a sub folder named TABCompletion
 - Run import-module TABCompletion (to get this permanently, add the line to your $profile)
 - Now you should have tab completion for ssh parameters (enter ssh <TAB> or ssh <Ctrl+Space>)
 

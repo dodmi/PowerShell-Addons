@@ -15,3 +15,5 @@ SSH-TABComplete.psm1 supports command completion for SSH parameters and known ho
 ## OpenSSL
 OpenSSL-TABComplete.psm1 supports command completion for OpenSSL commands.
 It's important to have the OpenSSL executable in your path, at OpenSSL commands are used to dynamically generate the help content.
+
+![TAB completion for OpenSSL](../docs/images/tab_completion_openssl.png)

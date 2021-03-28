@@ -28,18 +28,21 @@ When was this file updated?
 <#
     .DESCRIPTION
     Creates a result element from a string or a hash set containing an additional description
-    $x.Param -> Parameter value
-    $x.ShortDesc -> Short description (in Ctrl+Space list)
-    $x.LongDesc -> Long description (in Ctrl+Space status oon selection)
-    .PARAMETER resSet
-    A hash set to convert into a completion result (needs the keys Param, ShortDesc and LongDesc
+    .PARAMETER Param
+    The parameter to create the completion reult for (e.g. -p)
+    .PARAMETER ShortDesc
+    A short description to display in lists (e.g. -p (Print))
+    .PARAMETER LongDesc
+    A long description to display as hint (e.g. Print the file)
 #>
 function Create-CompletionResult {
-    param([System.Collections.Hashtable] $resSet)
+    param(
+        [ValidateNotNullOrEmpty()][String] $Param,
+        [ValidateNotNullOrEmpty()][String] $ShortDesc,
+        [ValidateNotNullOrEmpty()][String] $LongDesc
+    )
     
-    if ($resSet) {
-        $res = [System.Management.Automation.CompletionResult]::new($resSet["Param"], $resSet["ShortDesc"], 'ParameterValue', $resSet["LongDesc"])
-    }
+    $res = [System.Management.Automation.CompletionResult]::new($Param, $ShortDesc, 'ParameterValue', $LongDesc)
     
     return $res
 }
@@ -292,7 +295,7 @@ function Add-OpenSSLTabCompletion {
 								$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
 							}
 							default { 
-								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -resSet @{ "Param"=$_; "ShortDesc"=$_; "LongDesc"=Get-OpenSSLOptionHelp -Option $_ -Mode $mode } }
+								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
@@ -303,7 +306,7 @@ function Add-OpenSSLTabCompletion {
 								$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
 							}
 							default { 
-								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -resSet @{ "Param"=$_; "ShortDesc"=$_; "LongDesc"=Get-OpenSSLOptionHelp -Option $_ -Mode $mode } }
+								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}					
@@ -319,7 +322,7 @@ function Add-OpenSSLTabCompletion {
 								$allResults = Complete-Files $wordToComplete 
 							}
 							default { 
-								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -resSet @{ "Param"=$_; "ShortDesc"=$_; "LongDesc"=Get-OpenSSLOptionHelp -Option $_ -Mode $mode } }
+								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
@@ -329,7 +332,7 @@ function Add-OpenSSLTabCompletion {
 								$allResults = Complete-Files $wordToComplete 
 							}
 							default { 
-								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -resSet @{ "Param"=$_; "ShortDesc"=$_; "LongDesc"=Get-OpenSSLOptionHelp -Option $_ -Mode $mode } }
+								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
@@ -339,7 +342,7 @@ function Add-OpenSSLTabCompletion {
 								$allResults = Complete-Files $wordToComplete 
 							}
 							default { 
-								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -resSet @{ "Param"=$_; "ShortDesc"=$_; "LongDesc"=Get-OpenSSLOptionHelp -Option $_ -Mode $mode } }
+								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
@@ -349,7 +352,7 @@ function Add-OpenSSLTabCompletion {
 								$allResults = Complete-Files $wordToComplete 
 							}
 							default { 
-								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -resSet @{ "Param"=$_; "ShortDesc"=$_; "LongDesc"=Get-OpenSSLOptionHelp -Option $_ -Mode $mode } }
+								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
@@ -359,14 +362,14 @@ function Add-OpenSSLTabCompletion {
 								$allResults = Complete-Files $wordToComplete 
 							}
 							default { 
-								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -resSet @{ "Param"=$_; "ShortDesc"=$_; "LongDesc"=Get-OpenSSLOptionHelp -Option $_ -Mode $mode } }
+								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
 					"-key" {
 						switch -RegEx ($mode) {
 							"ca" { 
-								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -resSet @{ "Param"=$_; "ShortDesc"=$_; "LongDesc"=Get-OpenSSLOptionHelp -Option $_ -Mode $mode } }
+								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 							default { 
 								$allResults = Complete-Files $wordToComplete 								
@@ -379,7 +382,7 @@ function Add-OpenSSLTabCompletion {
 								$allResults = Complete-Files $wordToComplete 
 							}
 							default { 
-								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -resSet @{ "Param"=$_; "ShortDesc"=$_; "LongDesc"=Get-OpenSSLOptionHelp -Option $_ -Mode $mode } }
+								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
@@ -394,15 +397,15 @@ function Add-OpenSSLTabCompletion {
 						$allResults = $digests | ? { $_ -like "$wordToComplete*" } | Sort-Object -Unique
 					}
 					default {
-						$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -resSet @{ "Param"=$_; "ShortDesc"=$_; "LongDesc"=Get-OpenSSLOptionHelp -Option $_ -Mode $mode } }
+						$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 					}
 				}
 			}
 			"help" { 
-				$allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult -resSet $_ }
+				$allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
 			}
             default {
-                $allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult -resSet $_ }
+                $allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
             }
         }
         return $allResults

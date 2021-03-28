@@ -80,18 +80,21 @@ function Get-ActiveIPs {
 <#
     .DESCRIPTION
     Creates a result element from a string or a hash set containing an additional description
-    $x.Param -> Parameter value
-    $x.ShortDesc -> Short description (in Ctrl+Space list)
-    $x.LongDesc -> Long description (in Ctrl+Space status oon selection)
-    .PARAMETER resSet
-    A hash set to convert into a completion result (needs the keys Param, ShortDesc and LongDesc
+    .PARAMETER Param
+    The parameter to create the completion reult for (e.g. -p)
+    .PARAMETER ShortDesc
+    A short description to display in lists (e.g. -p (Print))
+    .PARAMETER LongDesc
+    A long description to display as hint (e.g. Print the file)
 #>
 function Create-CompletionResult {
-    param([System.Collections.Hashtable] $resSet)
+    param(
+        [ValidateNotNullOrEmpty()][String] $Param,
+        [ValidateNotNullOrEmpty()][String] $ShortDesc,
+        [ValidateNotNullOrEmpty()][String] $LongDesc
+    )
     
-    if ($resSet) {
-        $res = [System.Management.Automation.CompletionResult]::new($resSet["Param"], $resSet["ShortDesc"], 'ParameterValue', $resSet["LongDesc"])
-    }
+    $res = [System.Management.Automation.CompletionResult]::new($Param, $ShortDesc, 'ParameterValue', $LongDesc)
     
     return $res
 }
@@ -226,7 +229,7 @@ function Add-SSHTabCompletion {
             }
             "-J|-W" {
                 $allResults = @()
-                $allResults += $hosts | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult -resSet $_ }
+                $allResults += $hosts | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
                 break
             } 
             "-c" {
@@ -239,8 +242,8 @@ function Add-SSHTabCompletion {
             }
             default {
                 $allResults = @()
-                $allResults += $hosts | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult -resSet $_ }
-                $allResults += $simpleParams | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult -resSet $_ }
+                $allResults += $hosts | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
+                $allResults += $simpleParams | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
                 break
             }
         }

@@ -18,7 +18,7 @@ Where do I get the latest version?
 https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
 
 When was this file updated?
-2021-03-09
+2021-03-28
 #>
 
 <# 
@@ -83,17 +83,11 @@ function Get-ActiveIPs {
     $x.Param -> Parameter value
     $x.ShortDesc -> Short description (in Ctrl+Space list)
     $x.LongDesc -> Long description (in Ctrl+Space status oon selection)
-    .PARAMETER resVal
-    A string value to convert into a completion result
     .PARAMETER resSet
-    A hash set to convert into a completion result
+    A hash set to convert into a completion result (needs the keys Param, ShortDesc and LongDesc
 #>
 function Create-CompletionResult {
-    param([String] $resVal, [System.Collections.Hashtable] $resSet)
-    
-    if ($resVal) {
-        $res = [System.Management.Automation.CompletionResult]::new($resVal, $resVal, 'ParameterValue', $resVal)
-    }
+    param([System.Collections.Hashtable] $resSet)
     
     if ($resSet) {
         $res = [System.Management.Automation.CompletionResult]::new($resSet["Param"], $resSet["ShortDesc"], 'ParameterValue', $resSet["LongDesc"])
@@ -219,11 +213,11 @@ function Add-SSHTabCompletion {
                 
         switch -RegEx -CaseSensitive (Get-LeftCommandLineElement -cmdAst $commandAst -curPos $cursorPosition) {
             "-b" { 
-                $allResults = Get-ActiveIPs | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -resVal $_ }
+                $allResults = Get-ActiveIPs | ? { $_ -like "$wordToComplete*" } 
                 break
             }
             "-Q" { 
-                $allResults = $queryOptions | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -resVal $_ }
+                $allResults = $queryOptions | ? { $_ -like "$wordToComplete*" } 
                 break
             }
             "-E|-F|-i" {

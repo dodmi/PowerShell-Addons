@@ -18,13 +18,13 @@ Where do I get the latest version?
 https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
 
 When was this file updated?
-2021-03-28
+2021-03-30
 #>
 
-<# 
-    .DESCRIPTION 
-    Returns all hosts defined in the config file, 
-    ignoring hostnames that describe multiple hosts or 
+<#
+    .DESCRIPTION
+    Returns all hosts defined in the config file,
+    ignoring hostnames that describe multiple hosts or
     exclude hosts
 #>
 function Get-SSHConfigHosts {
@@ -93,16 +93,16 @@ function Create-CompletionResult {
         [ValidateNotNullOrEmpty()][String] $ShortDesc,
         [ValidateNotNullOrEmpty()][String] $LongDesc
     )
-    
+
     $res = [System.Management.Automation.CompletionResult]::new($Param, $ShortDesc, 'ParameterValue', $LongDesc)
-    
+
     return $res
 }
 
 <#
     .DESCRIPTION
     Returns a list of file names to complete
-    .PARAMETER wordToComplete 
+    .PARAMETER wordToComplete
     The text to filter the results for
 #>
 function Complete-Files {
@@ -124,15 +124,15 @@ function Complete-Files {
 #>
 function Get-LeftCommandLineElement {
     param(
-        [System.Management.Automation.Language.CommandAst] $cmdAst, 
+        [System.Management.Automation.Language.CommandAst] $cmdAst,
         [int] $curPos
     )
 
-    for ($i = $cmdAst.CommandElements.Count - 1; $i -ge 0; $i--) {        
-        $aktCmdPart = $cmdAst.CommandElements[$i].Extent        
+    for ($i = $cmdAst.CommandElements.Count - 1; $i -ge 0; $i--) {
+        $aktCmdPart = $cmdAst.CommandElements[$i].Extent
         $result = ""
-        if (($i -gt 0) -and ($aktCmdPart.StartOffset -le $curPos) -and 
-            (($aktCmdPart.EndOffset -ge $curPos) -or 
+        if (($i -gt 0) -and ($aktCmdPart.StartOffset -le $curPos) -and
+            (($aktCmdPart.EndOffset -ge $curPos) -or
              ($cmdAst.CommandElements[-1].Extent.EndOffset -lt $curPos))) {
             if ($cmdAst.CommandElements[-1].Extent.EndOffset -lt $curPos) {
                 $result = $cmdAst.CommandElements[-1].Extent.Text
@@ -147,18 +147,18 @@ function Get-LeftCommandLineElement {
 
 <#
     .DESCRIPTION
-    Defines and registers the SSH command completor
+    Finally implements the completion logic and registers the SSH command completor
 #>
 function Add-SSHTabCompletion {
     # Command to complete
-	$cmd = "ssh"
-    
+	$script:cmd = "ssh"
+
     # Logic to compare input and present results
-    $scriptBlock = {
-        param($wordToComplete, $commandAst, $cursorPosition)        
-       
+    $script:completionScriptBlock = {
+        param($wordToComplete, $commandAst, $cursorPosition)
+
         # Parameter list
-        $simpleParams = @(        
+        $simpleParams = @(
             @{"Param"="-4"; "ShortDesc"="-4 (IPv4 mode)"; "LongDesc"="Force IPv4 connection"},
             @{"Param"="-6"; "ShortDesc"="-6 (IPv6 mode)"; "LongDesc"="Force IPv6 connection"},
             @{"Param"="-A"; "ShortDesc"="-A (agent)"; "LongDesc"="Forward using connection agent"},
@@ -168,7 +168,7 @@ function Add-SSHTabCompletion {
             @{"Param"="-C"; "ShortDesc"="-C (compression)"; "LongDesc"="Enable data compression"},
             @{"Param"="-c"; "ShortDesc"="-c (<ciphers>)"; "LongDesc"="Specify comma separated list of allowed ciphers"},
             @{"Param"="-D"; "ShortDesc"="-D (dyn fwd <port>)"; "LongDesc"="Specify [bindAddress:]port to dynamically forward connections, made to this port"},
-            @{"Param"="-E"; "ShortDesc"="-E (log <file>)"; "LongDesc"="Specify log file to use"},                      
+            @{"Param"="-E"; "ShortDesc"="-E (log <file>)"; "LongDesc"="Specify log file to use"},
             @{"Param"="-e"; "ShortDesc"="-e (esc <char>)"; "LongDesc"="Specify the escape char to use"},
             @{"Param"="-F"; "ShortDesc"="-F (config <file>)"; "LongDesc"="Specify config file to use"},
             @{"Param"="-f"; "ShortDesc"="-f (fall to bg)"; "LongDesc"="Fall to background before command execution"},
@@ -204,23 +204,23 @@ function Add-SSHTabCompletion {
             @{"Param"="-Y"; "ShortDesc"="-Y (trusted X11 fwd)"; "LongDesc"="Enable trusted X11 forwarding"},
             @{"Param"="-y"; "ShortDesc"="-y (use syslog)"; "LongDesc"="Write errors to syslog instead of stdErr"}
         )
-        
+
         # Query options (for -Q)
         $queryOptions = "cipher", "cipher_auth", "help", "mac", "kex", "kex-gss", "key", "key-cert", "key-plain", "key-sig", "protocol-version", "sig"
 
         # Prepare known target hosts
-        $hosts = @()        
-        foreach ($h in (Get-SSHHosts)) {            
+        $hosts = @()
+        foreach ($h in (Get-SSHHosts)) {
             $hosts += @{"Param"=$h; "ShortDesc"=$h; "LongDesc"="Connect to target system $h"}
         }
-                
+
         switch -RegEx -CaseSensitive (Get-LeftCommandLineElement -cmdAst $commandAst -curPos $cursorPosition) {
-            "-b" { 
-                $allResults = Get-ActiveIPs | ? { $_ -like "$wordToComplete*" } 
+            "-b" {
+                $allResults = Get-ActiveIPs | ? { $_ -like "$wordToComplete*" }
                 break
             }
-            "-Q" { 
-                $allResults = $queryOptions | ? { $_ -like "$wordToComplete*" } 
+            "-Q" {
+                $allResults = $queryOptions | ? { $_ -like "$wordToComplete*" }
                 break
             }
             "-E|-F|-i" {
@@ -231,7 +231,7 @@ function Add-SSHTabCompletion {
                 $allResults = @()
                 $allResults += $hosts | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
                 break
-            } 
+            }
             "-c" {
                 $allResults = ssh -Q cipher | ? { $_ -like "$wordToComplete*" }
                 break
@@ -247,11 +247,39 @@ function Add-SSHTabCompletion {
                 break
             }
         }
+
         return $allResults
     }
-        
-	# Register completion with no arguments
-    Register-ArgumentCompleter -Native -CommandName $cmd -ScriptBlock $scriptBlock    
+
+    if ($PSVersionTable.PSVersion.Major -ge 6) {
+        # Register completion for native commands
+        # (this is broken in PowerShell 5.1 and below for parameters starting with - or --)
+        Register-ArgumentCompleter -Native -CommandName $script:cmd -ScriptBlock $script:completionScriptBlock
+    } else {
+        # Overwrite TabExpansion function for PowerShell 5.1 and below
+        # (this works fine, but command completion is only supported at the end of the line)
+        if (Test-Path "Function:\TabExpansion") {
+            $script:FuncBackupName = "TabExpansion." + (get-date).Ticks
+            Rename-Item "Function:\TabExpansion" "global:$($script:FuncBackupName)"
+        }
+
+        function global:TabExpansion {
+            param(
+                [String] $line,
+                [String] $lastWord
+            )
+
+            $commandLine = [regex]::Split($line, '[|;]')[-1].TrimStart()
+            $ast=[System.Management.Automation.Language.Parser]::ParseInput($commandLine, [ref]$null, [ref]$null)
+            $commandAst=$ast.Find({$args[0] -is [System.Management.Automation.Language.CommandAst]}, $false)
+
+            if ($commandAst.GetCommandName() -like $script:cmd) {
+                Invoke-Command -ScriptBlock $script:completionScriptBlock -ArgumentList @($lastWord,$commandAst,$commandLine.length)
+            } else {
+                if ($script:FuncBackupName) { & $script:FuncBackupName -line $line -lastWord $lastWord }
+            }
+        }
+    }
 }
 
 Add-SSHTabCompletion

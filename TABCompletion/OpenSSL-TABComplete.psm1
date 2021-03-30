@@ -1,5 +1,4 @@
 <#
-
 What is this?
 This is a PowerShell module providing TAB completion for the native openssl command
 
@@ -21,8 +20,7 @@ Where do I get the latest version?
 https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
 
 When was this file updated?
-2021-03-28
-
+2021-03-30
 #>
 
 <#
@@ -185,14 +183,14 @@ function Complete-Dirs {
 
 <#
     .DESCRIPTION
-    Defines and registers the OpenSSL command completor
+    Finally defines and registers the OpenSSL command completor
 #>
 function Add-OpenSSLTabCompletion {
     # Command to complete
-	$cmd = "openssl"
+	$script:cmd = "openssl"
     
     # Logic to compare input and present results
-    $scriptBlock = {
+    $script:completionScriptBlock = {
         param($wordToComplete, $commandAst, $cursorPosition)        
        
         # Parameter list
@@ -411,8 +409,35 @@ function Add-OpenSSLTabCompletion {
         return $allResults
     }
         
-	# Register completion with no arguments
-    Register-ArgumentCompleter -Native -CommandName $cmd -ScriptBlock $scriptBlock    
+	if ($PSVersionTable.PSVersion.Major -ge 6) {
+        # Register completion for native commands
+        # (this is broken in PowerShell 5.1 and below for parameters starting with - or --)
+        Register-ArgumentCompleter -Native -CommandName $script:cmd -ScriptBlock $script:completionScriptBlock
+    } else {
+        # Overwrite TabExpansion function for PowerShell 5.1 and below
+        # (this works fine, but command completion is only supported at the end of the line)
+        if (Test-Path "Function:\TabExpansion") {
+            $script:FuncBackupName = "TabExpansion." + (get-date).Ticks
+            Rename-Item "Function:\TabExpansion" "global:$($script:FuncBackupName)"
+        }
+
+        function global:TabExpansion {
+            param(
+                [String] $line,
+                [String] $lastWord
+            )
+
+            $commandLine = [regex]::Split($line, '[|;]')[-1].TrimStart()
+            $ast=[System.Management.Automation.Language.Parser]::ParseInput($commandLine, [ref]$null, [ref]$null)
+            $commandAst=$ast.Find({$args[0] -is [System.Management.Automation.Language.CommandAst]}, $false)
+
+            if ($commandAst.GetCommandName() -like $script:cmd) {
+                Invoke-Command -ScriptBlock $script:completionScriptBlock -ArgumentList @($lastWord,$commandAst,$commandLine.length)
+            } else {
+                if ($script:FuncBackupName) { & $script:FuncBackupName -line $line -lastWord $lastWord }
+            }
+        }
+    }
 }
 
 if (Get-Command openssl.exe -CommandType Application -EA SilentlyContinue) {

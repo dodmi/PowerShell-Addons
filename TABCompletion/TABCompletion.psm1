@@ -6,8 +6,8 @@
 
 function Import-Completions {
 	$srcPath = Get-Module -ListAvailable TABCompletion
-	if ($srcPath) { 
-		$srcPath = Split-Path $srcPath[0].Path 
+	if ($srcPath) {
+		$srcPath = Split-Path $srcPath[0].Path
 		Write-Output "Pfad: $srcPath"
 		Get-ChildItem -Path $srcPath -Filter "*-TABComplete.psm1" | % {Import-Module $_.FullName}
 	}

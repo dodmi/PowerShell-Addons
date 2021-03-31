@@ -20,7 +20,7 @@ Where do I get the latest version?
 https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
 
 When was this file updated?
-2021-03-30
+2021-03-31
 #>
 
 <#
@@ -39,9 +39,9 @@ function Create-CompletionResult {
         [ValidateNotNullOrEmpty()][String] $ShortDesc,
         [ValidateNotNullOrEmpty()][String] $LongDesc
     )
-    
+
     $res = [System.Management.Automation.CompletionResult]::new($Param, $ShortDesc, 'ParameterValue', $LongDesc)
-    
+
     return $res
 }
 
@@ -55,15 +55,15 @@ function Create-CompletionResult {
 #>
 function Get-LeftCommandLineElement {
     param(
-        [System.Management.Automation.Language.CommandAst] $cmdAst, 
+        [System.Management.Automation.Language.CommandAst] $cmdAst,
         [int] $curPos
     )
 
-    for ($i = $cmdAst.CommandElements.Count - 1; $i -ge 0; $i--) {        
-        $aktCmdPart = $cmdAst.CommandElements[$i].Extent        
+    for ($i = $cmdAst.CommandElements.Count - 1; $i -ge 0; $i--) {
+        $aktCmdPart = $cmdAst.CommandElements[$i].Extent
         $result = ""
-        if (($i -gt 0) -and ($aktCmdPart.StartOffset -le $curPos) -and 
-            (($aktCmdPart.EndOffset -ge $curPos) -or 
+        if (($i -gt 0) -and ($aktCmdPart.StartOffset -le $curPos) -and
+            (($aktCmdPart.EndOffset -ge $curPos) -or
              ($cmdAst.CommandElements[-1].Extent.EndOffset -lt $curPos))) {
             if ($cmdAst.CommandElements[-1].Extent.EndOffset -lt $curPos) {
                 $result = $cmdAst.CommandElements[-1].Extent.Text
@@ -84,7 +84,7 @@ function Get-LeftCommandLineElement {
 #>
 function Get-OpenSSLMode {
     param(
-        [System.Management.Automation.Language.CommandAst] $cmdAst 
+        [System.Management.Automation.Language.CommandAst] $cmdAst
     )
 
 	if ($cmdAst.CommandElements.Count -le 1) {
@@ -95,15 +95,15 @@ function Get-OpenSSLMode {
     return $result
 }
 
-<# 
-	.DESCRIPTION 
+<#
+	.DESCRIPTION
 	Provides an option list, that was retrieved from openssl list -1 -options <mode>
 	.PARAMETER Mode
 	The OpenSSL mode to get the options for
 #>
 function Get-OpenSSLOptions {
 	param( [String] $Mode )
-	$options = openssl list -1 -options $Mode 
+	$options = openssl list -1 -options $Mode
 	for ($i=0; $i -lt $options.count; $i++) {
 		if ($options[$i].indexOf(" ") -gt 0) {
 			$options[$i] = $($options[$i].split(" "))[0]
@@ -122,14 +122,14 @@ $script:optionHelpTable = @{}
 	The option, for which the help is needed
 #>
 function Get-OpenSSLOptionHelp {
-	param( 
+	param(
 		[String] $Option,
 		[String] $Mode
 	)
 	$helpStr = "$Mode $Option"
 	if (-not $script:optionHelpTable.containsKey($Mode)) {
 		$helpStrings = openssl $Mode -help 2>&1
-		$helpTable = @{}
+		$helpTable = [HashTable]::New(0, [StringComparer]::Ordinal)
 		foreach ($line in $helpStrings)
 		{
 			if ($line -match "^\s(-\S+)\s(\S+)\s+(.+)$")
@@ -154,7 +154,7 @@ function Get-OpenSSLOptionHelp {
 <#
     .DESCRIPTION
     Returns a list of file names to complete
-    .PARAMETER wordToComplete 
+    .PARAMETER wordToComplete
     The text to filter the results for
 #>
 function Complete-Files {
@@ -169,7 +169,7 @@ function Complete-Files {
 <#
     .DESCRIPTION
     Returns a list of dir names to complete
-    .PARAMETER wordToComplete 
+    .PARAMETER wordToComplete
     The text to filter the results for
 #>
 function Complete-Dirs {
@@ -188,11 +188,11 @@ function Complete-Dirs {
 function Add-OpenSSLTabCompletion {
     # Command to complete
 	$script:cmd = "openssl"
-    
+
     # Logic to compare input and present results
     $script:completionScriptBlock = {
-        param($wordToComplete, $commandAst, $cursorPosition)        
-       
+        param($wordToComplete, $commandAst, $cursorPosition)
+
         # Parameter list
         $modes = @(
 			@{"Param"="asn1parse"; "ShortDesc"="asn1parse"; "LongDesc"="Parse an ASN.1 sequence"},
@@ -244,7 +244,7 @@ function Add-OpenSSLTabCompletion {
 			@{"Param"="version"; "ShortDesc"="version"; "LongDesc"="OpenSSL Version Information"},
 			@{"Param"="x509"; "ShortDesc"="x509"; "LongDesc"="X.509 Certificate Data Management"}
 		)
-		
+
 		$mode = Get-OpenSSLMode $commandAst
         switch -RegEx ($mode) {
 			"asn1parse|ca|ciphers|cms|crl|crl2pkcs7|dgst|dhparam|dsa|dsaparam|ec|ecparam|enc|engine|errstr|gendsa|genpkey|genrsa|list|nseq|ocsp|passwd|pkcs12|pkcs7|pkcs8|pkey|pkeyparam|pkeyutl|prime|rand|rehash|req|rsa|rsautl|s_client|s_server|s_time|sess_id|smime|speed|spkac|srp|storeutl|ts|verify|version|x509" {
@@ -285,29 +285,29 @@ function Add-OpenSSLTabCompletion {
 					"-maxfraglen" {
 						$allResults = "512","1024","2048","4096"
 						$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
-					}					
+					}
 					"-purpose" {
 						switch -RegEx ($mode) {
-							"verify" { 
+							"verify" {
 								$allResults = "sslclient", "sslserver", "nssslserver", "smimesign", "smimeencrypt", "crlsign", "any", "ocsphelper", "timestampsign"
 								$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
 							}
-							default { 
+							default {
 								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
 					"-verify_name" {
 						switch -RegEx ($mode) {
-							"verify" { 
+							"verify" {
 								$allResults = "default", "pkcs7", "smime_sign", "ssl_client", "ssl_server"
 								$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
 							}
-							default { 
+							default {
 								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
-					}					
+					}
 					"-CA|-cafile|-CAfile|-CAkey|-CAserial|-cert_chain|-cert2|-certfile|-certsout|-chain|-chainCAfile|-config|-content|-CRL|-CRLfile|-ctlogfile|-data|-dcert|-dcert_chain|-dhparam|-dkey|-extfile|-force_pubkey|-genconf|-gendelta|-in|-index|-inkey|-key2|-keyfile|-keylogfile|-kfile|-keyout|-msgfile|-oid|-out|-paramfile|-peerkey|-prverify|-psk_session|-queryfile|-rand|-recip|-reqin|-reqout|-requestCAfile|-respin|-respout|-revoke|-rkey|-rother|-rsigner|-sess_in|-sess_out|-sigfile|-sign_other|-signer|-signkey|-srpvfile|-ss_cert|-ssl_config|-status_file|-trusted|-untrusted|-VAfile|-verify_other|-verify_receipt|-verifyCAfile|-writerand|-xcert|-xchain|-xkey" {
 						$allResults = Complete-Files $wordToComplete
 					}
@@ -316,76 +316,76 @@ function Add-OpenSSLTabCompletion {
 					}
 					"-cert" {
 						switch -RegEx ($mode) {
-							"ca|ocsp|s_client|s_server|s_time" { 
-								$allResults = Complete-Files $wordToComplete 
+							"ca|ocsp|s_client|s_server|s_time" {
+								$allResults = Complete-Files $wordToComplete
 							}
-							default { 
+							default {
 								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
 					"-early_data" {
 						switch -RegEx ($mode) {
-							"s_client" { 
-								$allResults = Complete-Files $wordToComplete 
+							"s_client" {
+								$allResults = Complete-Files $wordToComplete
 							}
-							default { 
+							default {
 								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
 					"-sign" {
 						switch -RegEx ($mode) {
-							"dgst" { 
-								$allResults = Complete-Files $wordToComplete 
+							"dgst" {
+								$allResults = Complete-Files $wordToComplete
 							}
-							default { 
+							default {
 								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
 					"-verify" {
 						switch -RegEx ($mode) {
-							"dgst" { 
-								$allResults = Complete-Files $wordToComplete 
+							"dgst" {
+								$allResults = Complete-Files $wordToComplete
 							}
-							default { 
+							default {
 								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
 					"-issuer" {
 						switch -RegEx ($mode) {
-							"ocsp" { 
-								$allResults = Complete-Files $wordToComplete 
+							"ocsp" {
+								$allResults = Complete-Files $wordToComplete
 							}
-							default { 
+							default {
 								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
 					"-key" {
 						switch -RegEx ($mode) {
-							"ca" { 
+							"ca" {
 								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
-							default { 
-								$allResults = Complete-Files $wordToComplete 								
+							default {
+								$allResults = Complete-Files $wordToComplete
 							}
 						}
 					}
 					"-spkac" {
 						switch -RegEx ($mode) {
-							"ca" { 
-								$allResults = Complete-Files $wordToComplete 
+							"ca" {
+								$allResults = Complete-Files $wordToComplete
 							}
-							default { 
+							default {
 								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 						}
 					}
 					"-md" {
-						$allResults = @() 
+						$allResults = @()
 						$digests = openssl list -1 -digest-algorithms
 						for ($i=0; $i -lt $digests.count; $i++) {
 							if ($digests[$i].indexOf(" ") -gt 0) {
@@ -399,7 +399,7 @@ function Add-OpenSSLTabCompletion {
 					}
 				}
 			}
-			"help" { 
+			"help" {
 				$allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
 			}
             default {
@@ -408,7 +408,7 @@ function Add-OpenSSLTabCompletion {
         }
         return $allResults
     }
-        
+
 	if ($PSVersionTable.PSVersion.Major -ge 6) {
         # Register completion for native commands
         # (this is broken in PowerShell 5.1 and below for parameters starting with - or --)

@@ -3,14 +3,14 @@ What is this?
 This is a PowerShell module providing TAB completion for the native openssl command
 
 How to use this file alone?
-- Put the path to openssl.exe to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
+- Put the path to openssl executable to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
 - Run $env:PSModulePath in PowerShell
 - Place this file in one of the module locations in a sub folder named OpenSSL-TABComplete
 - Run import-module OpenSSL-TABComplete (to get this permanently, add the line to your $profile)
 - Now you should have tab completion for openssl parameters (enter openssl <TAB> or openssl <Ctrl+Space>)
 
 How to use this file in the bundle?
-- Put the path to openssl.exe to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
+- Put the path to openssl executable to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
 - Run $env:PSModulePath in PowerShell
 - Place this file and the file TABCompletion.psm1 in one of the module locations in a sub folder named TABCompletion
 - Run import-module TABCompletion (to get this permanently, add the line to your $profile)
@@ -440,7 +440,7 @@ function Add-OpenSSLTabCompletion {
     }
 }
 
-if (Get-Command openssl.exe -CommandType Application -EA SilentlyContinue) {
+if (Get-Command openssl -CommandType Application -EA SilentlyContinue) {
 	Add-OpenSSLTabCompletion
 } else {
 	Write-Error "OpenSSL was not found in your environment! Put it too path..."

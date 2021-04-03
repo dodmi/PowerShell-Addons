@@ -3,12 +3,14 @@ What is this?
 This is a PowerShell module providing TAB completion for the native ssh command
 
 How to use this file alone?
+- Put the path to ssh executable to your path variable (SSH NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
 - Run $env:PSModulePath in PowerShell
 - Place this file in one of the module locations in a sub folder named SSH-TABComplete
 - Run import-module SSH-TABComplete (to get this permanently, add the line to your $profile)
 - Now you should have tab completion for ssh parameters (enter ssh <TAB> or ssh <Ctrl+Space>)
 
 How to use this file in the bundle?
+- Put the path to ssh executable to your path variable (SSH NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
 - Run $env:PSModulePath in PowerShell
 - Place this file and the file TABCompletion.psm1 in one of the module locations in a sub folder named TABCompletion
 - Run import-module TABCompletion (to get this permanently, add the line to your $profile)
@@ -282,7 +284,11 @@ function Add-SSHTabCompletion {
     }
 }
 
-Add-SSHTabCompletion
+if (Get-Command ssh -CommandType Application -EA SilentlyContinue) {
+	Add-SSHTabCompletion
+} else {
+	Write-Error "SSH was not found in your environment! Put it too path..."
+}
 
 # Expose no functions
 Export-ModuleMember -Function ""

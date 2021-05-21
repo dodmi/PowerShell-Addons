@@ -20,7 +20,7 @@ Where do I get the latest version?
 https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
 
 When was this file updated?
-2021-03-30
+2021-05-22
 #>
 
 <#
@@ -63,7 +63,9 @@ function Get-SSHKnownHosts {
 function Get-SSHHosts {
     $AllHosts = @()
     $AllHosts += Get-SSHConfigHosts
-    $AllHosts += Get-SSHKnownHosts
+    foreach ($h in Get-SSHKnownHosts) {
+        if ($h -notin $AllHosts) { $Allhosts += $h }
+    }
     return ($AllHosts  | Sort-Object -CaseSensitive -Unique)
 }
 

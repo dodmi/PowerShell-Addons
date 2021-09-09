@@ -2,6 +2,10 @@
 What is this?
 This is a PowerShell module providing TAB completion for the native openssl command
 
+Are there any requirements?
+- PowerShell obviously
+- OpenSSL 1.1.* or 3.0.* 
+
 How to use this file alone?
 - Put the path to openssl executable to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
 - Run $env:PSModulePath in PowerShell
@@ -20,7 +24,7 @@ Where do I get the latest version?
 https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
 
 When was this file updated?
-2021-03-31
+2021-09-09
 #>
 
 <#
@@ -186,6 +190,7 @@ function Complete-Dirs {
     Finally defines and registers the OpenSSL command completor
 #>
 function Add-OpenSSLTabCompletion {
+
     # Command to complete
 	$script:cmd = "openssl"
 
@@ -193,7 +198,7 @@ function Add-OpenSSLTabCompletion {
     $script:completionScriptBlock = {
         param($wordToComplete, $commandAst, $cursorPosition)
 
-        # Parameter list
+        # Parameter list (supported modes in OpenSSL 1.1)
         $modes = @(
 			@{"Param"="asn1parse"; "ShortDesc"="asn1parse"; "LongDesc"="Parse an ASN.1 sequence"},
 			@{"Param"="ca"; "ShortDesc"="ca"; "LongDesc"="Certificate Authority Management"},
@@ -244,10 +249,25 @@ function Add-OpenSSLTabCompletion {
 			@{"Param"="version"; "ShortDesc"="version"; "LongDesc"="OpenSSL Version Information"},
 			@{"Param"="x509"; "ShortDesc"="x509"; "LongDesc"="X.509 Certificate Data Management"}
 		)
+		
+		$defaultModeList = "asn1parse|ca|ciphers|cms|crl|crl2pkcs7|dgst|dhparam|dsa|dsaparam|ec|ecparam|enc|engine|errstr|gendsa|genpkey|genrsa|list|nseq|ocsp|passwd|pkcs12|pkcs7|pkcs8|pkey|pkeyparam|pkeyutl|prime|rand|rehash|req|rsa|rsautl|s_client|s_server|s_time|sess_id|smime|speed|spkac|srp|storeutl|ts|verify|version|x509"
+
+		if ($script:OpenSSLVersion -like "3.0") {
+			$openSSL30modes = @(
+				@{"Param"="cmp"; "ShortDesc"="cmp"; "LongDesc"="Certificate Management Protocol (CMP, RFC 4210) application"},
+				@{"Param"="fipsinstall"; "ShortDesc"="fipsinstall"; "LongDesc"="Perform FIPS configuration installation"},
+				@{"Param"="info"; "ShortDesc"="info"; "LongDesc"="Print OpenSSL built-in information"},
+				@{"Param"="kdf"; "ShortDesc"="kdf"; "LongDesc"="Perform Key Derivation Function operations"},
+				@{"Param"="mac"; "ShortDesc"="mac"; "LongDesc"="Perform Message Authentication Code operations"}
+			)
+			
+			$modes += $openSSL30modes
+			$defaultModeList += "|cmp|fipsinstall|info|kdf|mac"
+		}
 
 		$mode = Get-OpenSSLMode $commandAst
         switch -RegEx ($mode) {
-			"asn1parse|ca|ciphers|cms|crl|crl2pkcs7|dgst|dhparam|dsa|dsaparam|ec|ecparam|enc|engine|errstr|gendsa|genpkey|genrsa|list|nseq|ocsp|passwd|pkcs12|pkcs7|pkcs8|pkey|pkeyparam|pkeyutl|prime|rand|rehash|req|rsa|rsautl|s_client|s_server|s_time|sess_id|smime|speed|spkac|srp|storeutl|ts|verify|version|x509" {
+			$defaultModeList {
 				switch -RegEx (Get-LeftCommandLineElement $commandAst $cursorPosition) {
 					"-CAform" {
 						$allResults = "PEM","DER"
@@ -441,6 +461,21 @@ function Add-OpenSSLTabCompletion {
 }
 
 if (Get-Command openssl -CommandType Application -EA SilentlyContinue) {
+	$openSSLVersionString = openssl version 2>&1
+	switch -wildcard ($openSSLVersionString) {
+		"OpenSSL 1.1.*" {
+			$script:OpenSSLVersion = "1.1"
+			break
+		}
+		"OpenSSL 3.0.*" {
+			$script:OpenSSLVersion = "3.0"
+			break
+		}
+		default {
+			Write-Error "Could not determine OpenSSL version or version is not 1.1.* or 3.0.*: $openSSLVersionString"
+			return
+		}
+	}
 	Add-OpenSSLTabCompletion
 } else {
 	Write-Error "OpenSSL was not found in your environment! Put it too path..."

@@ -4,7 +4,7 @@ This is a PowerShell module providing TAB completion for the native openssl comm
 
 Are there any requirements?
 - PowerShell obviously
-- OpenSSL 1.1.* or 3.0.* 
+- OpenSSL 1.1.*, 3.0.* or 3.1.*
 
 How to use this file alone?
 - Put the path to openssl executable to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
@@ -252,7 +252,7 @@ function Add-OpenSSLTabCompletion {
 		
 		$defaultModeList = "asn1parse|ca|ciphers|cms|crl|crl2pkcs7|dgst|dhparam|dsa|dsaparam|ec|ecparam|enc|engine|errstr|gendsa|genpkey|genrsa|list|nseq|ocsp|passwd|pkcs12|pkcs7|pkcs8|pkey|pkeyparam|pkeyutl|prime|rand|rehash|req|rsa|rsautl|s_client|s_server|s_time|sess_id|smime|speed|spkac|srp|storeutl|ts|verify|version|x509"
 
-		if ($script:OpenSSLVersion -like "3.0") {
+		if ($script:OpenSSLVersion -like "3.x") {
 			$openSSL30modes = @(
 				@{"Param"="cmp"; "ShortDesc"="cmp"; "LongDesc"="Certificate Management Protocol (CMP, RFC 4210) application"},
 				@{"Param"="fipsinstall"; "ShortDesc"="fipsinstall"; "LongDesc"="Perform FIPS configuration installation"},
@@ -468,11 +468,15 @@ if (Get-Command openssl -CommandType Application -EA SilentlyContinue) {
 			break
 		}
 		"OpenSSL 3.0.*" {
-			$script:OpenSSLVersion = "3.0"
+			$script:OpenSSLVersion = "3.x"
+			break
+		}
+		"OpenSSL 3.1.*" {
+			$script:OpenSSLVersion = "3.x"
 			break
 		}
 		default {
-			Write-Error "Could not determine OpenSSL version or version is not 1.1.* or 3.0.*: $openSSLVersionString"
+			Write-Error "Could not determine OpenSSL version or version is not 1.1.*, 3.0.* or 3.1.x: $openSSLVersionString"
 			return
 		}
 	}

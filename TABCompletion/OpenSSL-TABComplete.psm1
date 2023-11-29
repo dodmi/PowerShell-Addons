@@ -250,7 +250,7 @@ function Add-OpenSSLTabCompletion {
 			@{"Param"="x509"; "ShortDesc"="x509"; "LongDesc"="X.509 Certificate Data Management"}
 		)
 		
-		$defaultModeList = "asn1parse|ca|ciphers|cms|crl|crl2pkcs7|dgst|dhparam|dsa|dsaparam|ec|ecparam|enc|engine|errstr|gendsa|genpkey|genrsa|list|nseq|ocsp|passwd|pkcs12|pkcs7|pkcs8|pkey|pkeyparam|pkeyutl|prime|rand|rehash|req|rsa|rsautl|s_client|s_server|s_time|sess_id|smime|speed|spkac|srp|storeutl|ts|verify|version|x509"
+		$defaultModeList = "^asn1parse$|^ca$|^ciphers$|^cms$|^crl$|^crl2pkcs7$|^dgst$|^dhparam$|^dsa$|^dsaparam$|^ec$|^ecparam$|^enc$|^engine$|^errstr$|^gendsa$|^genpkey$|^genrsa$|^list$|^nseq$|^ocsp$|^passwd$|^pkcs12$|^pkcs7$|^pkcs8$|^pkey$|^pkeyparam$|^pkeyutl$|^prime$|^rand$|^rehash$|^req$|^rsa$|^rsautl$|^s_client$|^s_server$|^s_time$|^sess_id$|^smime$|^speed$|^spkac$|^srp$|^storeutl$|^ts$|^verify$|^version$|^x509$"
 
 		if ($script:OpenSSLVersion -like "3.x") {
 			$openSSL30modes = @(
@@ -262,53 +262,53 @@ function Add-OpenSSLTabCompletion {
 			)
 			
 			$modes += $openSSL30modes
-			$defaultModeList += "|cmp|fipsinstall|info|kdf|mac"
+			$defaultModeList += "|^cmp$|^fipsinstall$|^info$|^kdf$|^mac$"
 		}
 
 		$mode = Get-OpenSSLMode $commandAst
         switch -RegEx ($mode) {
 			$defaultModeList {
 				switch -RegEx (Get-LeftCommandLineElement $commandAst $cursorPosition) {
-					"-CAform" {
+					"^-CAform$" {
 						$allResults = "PEM","DER"
 						$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
 					}
-					"-CAkeyform" {
+					"^-CAkeyform$" {
 						$allResults = "PEM","DER","ENGINE"
 						$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
 					}
-					"-inform" {
+					"^-inform$" {
 						$allResults = "PEM","DER"
 						switch -RegEx ($mode) {
-							"smime|cms" { $allResults += "SMIME" }
-							"dsa" { $allResults += "PVK" }
+							"^smime$|^cms$" { $allResults += "SMIME" }
+							"^dsa$" { $allResults += "PVK" }
 						}
 						$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
 					}
-					"-keyform" {
+					"^-keyform$" {
 						$allResults = "PEM","DER","ENGINE"
 						$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
 					}
-					"-outform" {
+					"^-outform$" {
 						$allResults = "PEM","DER"
 						switch -RegEx ($mode) {
-							"smime|cms" { $allResults += "SMIME" }
-							"dsa|rsa" { $allResults += "PVK" }
-							"sess_id" { $allResults += "NSS" }
+							"^smime$|^cms$" { $allResults += "SMIME" }
+							"^dsa$|^rsa$" { $allResults += "PVK" }
+							"^sess_id$" { $allResults += "NSS" }
 						}
 						$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
 					}
-					"-rctform" {
+					"^-rctform$" {
 						$allResults = "PEM","DER"
 						$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
 					}
-					"-maxfraglen" {
+					"^-maxfraglen$" {
 						$allResults = "512","1024","2048","4096"
 						$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
 					}
-					"-purpose" {
+					"^-purpose$" {
 						switch -RegEx ($mode) {
-							"verify" {
+							"^verify$" {
 								$allResults = "sslclient", "sslserver", "nssslserver", "smimesign", "smimeencrypt", "crlsign", "any", "ocsphelper", "timestampsign"
 								$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
 							}
@@ -317,9 +317,9 @@ function Add-OpenSSLTabCompletion {
 							}
 						}
 					}
-					"-verify_name" {
+					"^-verify_name$" {
 						switch -RegEx ($mode) {
-							"verify" {
+							"^verify$" {
 								$allResults = "default", "pkcs7", "smime_sign", "ssl_client", "ssl_server"
 								$allResults = $allResults | ? { $_ -like "$wordToComplete*" } | Sort-Object
 							}
@@ -328,15 +328,15 @@ function Add-OpenSSLTabCompletion {
 							}
 						}
 					}
-					"-CA|-cafile|-CAfile|-CAkey|-CAserial|-cert_chain|-cert2|-certfile|-certsout|-chain|-chainCAfile|-config|-content|-CRL|-CRLfile|-ctlogfile|-data|-dcert|-dcert_chain|-dhparam|-dkey|-extfile|-force_pubkey|-genconf|-gendelta|-in|-index|-inkey|-key2|-keyfile|-keylogfile|-kfile|-keyout|-msgfile|-oid|-out|-paramfile|-peerkey|-prverify|-psk_session|-queryfile|-rand|-recip|-reqin|-reqout|-requestCAfile|-respin|-respout|-revoke|-rkey|-rother|-rsigner|-sess_in|-sess_out|-sigfile|-sign_other|-signer|-signkey|-srpvfile|-ss_cert|-ssl_config|-status_file|-trusted|-untrusted|-VAfile|-verify_other|-verify_receipt|-verifyCAfile|-writerand|-xcert|-xchain|-xkey" {
+					"^-CA$|^-cafile$|^-CAfile$|^-CAkey$|^-CAserial$|^-cert_chain$|^-cert2$|^-certfile$|^-certsout$|^-chain$|^-chainCAfile$|^-config$|^-content$|^-CRL$|^-CRLfile$|^-ctlogfile$|^-data$|^-dcert$|^-dcert_chain$|^-dhparam$|^-dkey$|^-extfile$|^-force_pubkey$|^-genconf$|^-gendelta$|^-in$|^-index$|^-inkey$|^-key2$|^-keyfile$|^-keylogfile$|^-kfile$|^-keyout$|^-msgfile$|^-oid$|^-out$|^-paramfile$|^-peerkey$|^-prverify$|^-psk_session$|^-queryfile$|^-rand$|^-recip$|^-reqin$|^-reqout$|^-requestCAfile$|^-respin$|^-respout$|^-revoke$|^-rkey$|^-rother$|^-rsigner$|^-sess_in$|^-sess_out$|^-sigfile$|^-sign_other$|^-signer$|^-signkey$|^-srpvfile$|^-ss_cert$|^-ssl_config$|^-status_file$|^-trusted$|^-untrusted$|^-VAfile$|^-verify_other$|^-verify_receipt$|^-verifyCAfile$|^-writerand$|^-xcert$|^-xchain$|^-xkey$" {
 						$allResults = Complete-Files $wordToComplete
 					}
-					"-CApath|-chainCApath|-outdir|-verifyCApath" {
+					"^-CApath$|^-chainCApath$|^-outdir$|^-verifyCApath$" {
 						$allResults = Complete-Dirs $wordToComplete
 					}
-					"-cert" {
+					"^-cert$" {
 						switch -RegEx ($mode) {
-							"ca|ocsp|s_client|s_server|s_time" {
+							"^ca$|^ocsp$|^s_client$|^s_server$|^s_time$" {
 								$allResults = Complete-Files $wordToComplete
 							}
 							default {
@@ -344,9 +344,9 @@ function Add-OpenSSLTabCompletion {
 							}
 						}
 					}
-					"-early_data" {
+					"^-early_data$" {
 						switch -RegEx ($mode) {
-							"s_client" {
+							"^s_client$" {
 								$allResults = Complete-Files $wordToComplete
 							}
 							default {
@@ -354,9 +354,9 @@ function Add-OpenSSLTabCompletion {
 							}
 						}
 					}
-					"-sign" {
+					"^-sign$" {
 						switch -RegEx ($mode) {
-							"dgst" {
+							"^dgst$" {
 								$allResults = Complete-Files $wordToComplete
 							}
 							default {
@@ -364,9 +364,9 @@ function Add-OpenSSLTabCompletion {
 							}
 						}
 					}
-					"-verify" {
+					"^-verify$" {
 						switch -RegEx ($mode) {
-							"dgst" {
+							"^dgst$" {
 								$allResults = Complete-Files $wordToComplete
 							}
 							default {
@@ -374,9 +374,9 @@ function Add-OpenSSLTabCompletion {
 							}
 						}
 					}
-					"-issuer" {
+					"^-issuer$" {
 						switch -RegEx ($mode) {
-							"ocsp" {
+							"^ocsp$" {
 								$allResults = Complete-Files $wordToComplete
 							}
 							default {
@@ -384,9 +384,9 @@ function Add-OpenSSLTabCompletion {
 							}
 						}
 					}
-					"-key" {
+					"^-key$" {
 						switch -RegEx ($mode) {
-							"ca" {
+							"^ca$" {
 								$allResults = Get-OpenSSLOptions -Mode $mode | ? { $_ -like "$wordToComplete*" } | % { Create-CompletionResult -Param $_ -ShortDesc $_ -LongDesc (Get-OpenSSLOptionHelp -Option $_ -Mode $mode) }
 							}
 							default {
@@ -394,9 +394,9 @@ function Add-OpenSSLTabCompletion {
 							}
 						}
 					}
-					"-spkac" {
+					"^-spkac$" {
 						switch -RegEx ($mode) {
-							"ca" {
+							"^ca$" {
 								$allResults = Complete-Files $wordToComplete
 							}
 							default {
@@ -404,7 +404,7 @@ function Add-OpenSSLTabCompletion {
 							}
 						}
 					}
-					"-md" {
+					"^-md$" {
 						$allResults = @()
 						$digests = openssl list -1 -digest-algorithms
 						for ($i=0; $i -lt $digests.count; $i++) {
@@ -419,7 +419,7 @@ function Add-OpenSSLTabCompletion {
 					}
 				}
 			}
-			"help" {
+			"^help$" {
 				$allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
 			}
             default {

@@ -157,7 +157,7 @@ function Get-OpenSSLOptionHelp {
 
 <#
     .DESCRIPTION
-    Returns a list of file names to complete
+    Returns a list of file and folder names to complete
     .PARAMETER wordToComplete
     The text to filter the results for
 #>
@@ -165,14 +165,21 @@ function Complete-Files {
     param ([String] $wordToComplete)
     $currentPath = Get-Location | Select -ExpandProperty Path
     $result = @()
-    Get-ChildItem -Force "$wordToComplete*" | Select -ExpandProperty Fullname | % {$_.Replace($currentPath,".")} | % { $result += "'$_'" }
-	if (($result.count -eq 0) -and ($wordToComplete -like "")) { $result += "'.\'" }
+    $proposals = Get-ChildItem -Force "$wordToComplete*" | Select -ExpandProperty Fullname | % {$_.Replace($currentPath,".")}
+    foreach ($p in $proposals) {
+        if ((Test-Path $p -PathType Container) -and -not (Test-Path $p -PathType Leaf)) { $p += "\" }
+        if ($p.Contains(" ") -and -not ($p.StartsWith('"') -or $p.StartsWith("'"))) { $p = "'$p'" }
+        if ($p.Contains("$") -and -not ($p.StartsWith('"') -or $p.StartsWith("'"))) { $p = "'$p'" }
+        $result += $p
+    }
+
+	if (($result.count -eq 0) -and ($wordToComplete -like "")) { $result += ".\" }
     return $result
 }
 
 <#
     .DESCRIPTION
-    Returns a list of dir names to complete
+    Returns a list of folder names to complete
     .PARAMETER wordToComplete
     The text to filter the results for
 #>
@@ -180,8 +187,15 @@ function Complete-Dirs {
     param ([String] $wordToComplete)
     $currentPath = Get-Location | Select -ExpandProperty Path
     $result = @()
-    if ($wordToComplete -like "") { $result += "'.\'" }
-    Get-ChildItem -Directory -Force "$wordToComplete*" | Select -ExpandProperty Fullname | % {$_.Replace($currentPath,".")} | % { $result += "'$_'" }
+    $proposals = Get-ChildItem -Force -Directory "$wordToComplete*" | Select -ExpandProperty Fullname | % {$_.Replace($currentPath,".")}
+    foreach ($p in $proposals) {
+        $p += "\"
+        if ($p.Contains(" ") -and -not ($p.StartsWith('"') -or $p.StartsWith("'"))) { $p = "'$p'" }
+        if ($p.Contains("$") -and -not ($p.StartsWith('"') -or $p.StartsWith("'"))) { $p = "'$p'" }
+        $result += $p
+    }
+
+	if (($result.count -eq 0) -and ($wordToComplete -like "")) { $result += ".\" }
     return $result
 }
 

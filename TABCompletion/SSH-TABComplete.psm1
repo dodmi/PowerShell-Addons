@@ -105,7 +105,7 @@ function Create-CompletionResult {
 
 <#
     .DESCRIPTION
-    Returns a list of file names to complete
+    Returns a list of file and folder names to complete
     .PARAMETER wordToComplete
     The text to filter the results for
 #>
@@ -113,8 +113,15 @@ function Complete-Files {
     param ([String] $wordToComplete)
     $currentPath = Get-Location | Select -ExpandProperty Path
     $result = @()
-    Get-ChildItem -Force "$wordToComplete*" | Select -ExpandProperty Fullname | % {$_.Replace($currentPath,".")} | % { $result += "'$_'" }
-	if (($result.count -eq 0) -and ($wordToComplete -like "")) { $result += "'.\'" }
+    $proposals = Get-ChildItem -Force "$wordToComplete*" | Select -ExpandProperty Fullname | % {$_.Replace($currentPath,".")}
+    foreach ($p in $proposals) {
+        if ((Test-Path $p -PathType Container) -and -not (Test-Path $p -PathType Leaf)) { $p += "\" }
+        if ($p.Contains(" ") -and -not ($p.StartsWith('"') -or $p.StartsWith("'"))) { $p = "'$p'" }
+        if ($p.Contains("$") -and -not ($p.StartsWith('"') -or $p.StartsWith("'"))) { $p = "'$p'" }
+        $result += $p
+    }
+
+	if (($result.count -eq 0) -and ($wordToComplete -like "")) { $result += ".\" }
     return $result
 }
 

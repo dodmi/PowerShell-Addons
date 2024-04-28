@@ -162,7 +162,7 @@ function Get-LeftCommandLineElement {
 #>
 function Add-SSHTabCompletion {
     # Command to complete
-	$script:cmd = "ssh"
+	$script:cmd = @("ssh","ssh.exe")
 
     # Logic to compare input and present results
     $script:completionScriptBlock = {
@@ -265,7 +265,7 @@ function Add-SSHTabCompletion {
     if ($PSVersionTable.PSVersion.Major -ge 6) {
         # Register completion for native commands
         # (this is broken in PowerShell 5.1 and below for parameters starting with - or --)
-        Register-ArgumentCompleter -Native -CommandName $script:cmd -ScriptBlock $script:completionScriptBlock
+        $script:cmd | % { Register-ArgumentCompleter -Native -CommandName $_ -ScriptBlock $script:completionScriptBlock }
     } else {
         # Overwrite TabExpansion function for PowerShell 5.1 and below
         # (this works fine, but command completion is only supported at the end of the line)
@@ -284,7 +284,7 @@ function Add-SSHTabCompletion {
             $ast=[System.Management.Automation.Language.Parser]::ParseInput($commandLine, [ref]$null, [ref]$null)
             $commandAst=$ast.Find({$args[0] -is [System.Management.Automation.Language.CommandAst]}, $false)
 
-            if ($commandAst.GetCommandName() -like $script:cmd) {
+            if ($commandAst.GetCommandName() -in $script:cmd) {
                 Invoke-Command -ScriptBlock $script:completionScriptBlock -ArgumentList @($lastWord,$commandAst,$commandLine.length)
             } else {
                 if ($script:FuncBackupName) { & $script:FuncBackupName -line $line -lastWord $lastWord }

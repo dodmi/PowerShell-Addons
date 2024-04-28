@@ -4,7 +4,7 @@ This is a PowerShell module providing TAB completion for the native openssl comm
 
 Are there any requirements?
 - PowerShell obviously
-- OpenSSL 1.1.*, 3.0.* or 3.1.*
+- OpenSSL 1.1.*, 3.0.* - 3.3.*
 
 How to use this file alone?
 - Put the path to openssl executable to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
@@ -206,7 +206,7 @@ function Complete-Dirs {
 function Add-OpenSSLTabCompletion {
 
     # Command to complete
-	$script:cmd = "openssl"
+	$script:cmd = @("openssl","openssl.exe")
 
     # Logic to compare input and present results
     $script:completionScriptBlock = {
@@ -446,7 +446,7 @@ function Add-OpenSSLTabCompletion {
 	if ($PSVersionTable.PSVersion.Major -ge 6) {
         # Register completion for native commands
         # (this is broken in PowerShell 5.1 and below for parameters starting with - or --)
-        Register-ArgumentCompleter -Native -CommandName $script:cmd -ScriptBlock $script:completionScriptBlock
+        $script:cmd | % { Register-ArgumentCompleter -Native -CommandName $_ -ScriptBlock $script:completionScriptBlock }
     } else {
         # Overwrite TabExpansion function for PowerShell 5.1 and below
         # (this works fine, but command completion is only supported at the end of the line)
@@ -465,7 +465,7 @@ function Add-OpenSSLTabCompletion {
             $ast=[System.Management.Automation.Language.Parser]::ParseInput($commandLine, [ref]$null, [ref]$null)
             $commandAst=$ast.Find({$args[0] -is [System.Management.Automation.Language.CommandAst]}, $false)
 
-            if ($commandAst.GetCommandName() -like $script:cmd) {
+            if ($commandAst.GetCommandName() -in $script:cmd) {
                 Invoke-Command -ScriptBlock $script:completionScriptBlock -ArgumentList @($lastWord,$commandAst,$commandLine.length)
             } else {
                 if ($script:FuncBackupName) { & $script:FuncBackupName -line $line -lastWord $lastWord }
@@ -489,8 +489,16 @@ if (Get-Command openssl -CommandType Application -EA SilentlyContinue) {
 			$script:OpenSSLVersion = "3.x"
 			break
 		}
+		"OpenSSL 3.2.*" {
+			$script:OpenSSLVersion = "3.x"
+			break
+		}
+		"OpenSSL 3.3.*" {
+			$script:OpenSSLVersion = "3.x"
+			break
+		}
 		default {
-			Write-Error "Could not determine OpenSSL version or version is not 1.1.*, 3.0.* or 3.1.x: $openSSLVersionString"
+			Write-Error "Could not determine OpenSSL version or version is not 1.1, 3.0 - 3.3: $openSSLVersionString"
 			return
 		}
 	}

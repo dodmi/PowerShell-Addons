@@ -4,7 +4,7 @@ This is a PowerShell module providing TAB completion for the native openssl comm
 
 Are there any requirements?
 - PowerShell obviously
-- OpenSSL 1.1.*, 3.0.* - 3.3.*
+- OpenSSL 1.1.*, 3.0.* - 3.4.*
 
 How to use this file alone?
 - Put the path to openssl executable to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
@@ -24,7 +24,7 @@ Where do I get the latest version?
 https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
 
 When was this file updated?
-2021-09-09
+2024-11-02
 #>
 
 <#
@@ -263,7 +263,7 @@ function Add-OpenSSLTabCompletion {
 			@{"Param"="version"; "ShortDesc"="version"; "LongDesc"="OpenSSL Version Information"},
 			@{"Param"="x509"; "ShortDesc"="x509"; "LongDesc"="X.509 Certificate Data Management"}
 		)
-		
+
 		$defaultModeList = "^asn1parse$|^ca$|^ciphers$|^cms$|^crl$|^crl2pkcs7$|^dgst$|^dhparam$|^dsa$|^dsaparam$|^ec$|^ecparam$|^enc$|^engine$|^errstr$|^gendsa$|^genpkey$|^genrsa$|^list$|^nseq$|^ocsp$|^passwd$|^pkcs12$|^pkcs7$|^pkcs8$|^pkey$|^pkeyparam$|^pkeyutl$|^prime$|^rand$|^rehash$|^req$|^rsa$|^rsautl$|^s_client$|^s_server$|^s_time$|^sess_id$|^smime$|^speed$|^spkac$|^srp$|^storeutl$|^ts$|^verify$|^version$|^x509$"
 
 		if ($script:OpenSSLVersion -like "3.x") {
@@ -274,7 +274,7 @@ function Add-OpenSSLTabCompletion {
 				@{"Param"="kdf"; "ShortDesc"="kdf"; "LongDesc"="Perform Key Derivation Function operations"},
 				@{"Param"="mac"; "ShortDesc"="mac"; "LongDesc"="Perform Message Authentication Code operations"}
 			)
-			
+
 			$modes += $openSSL30modes
 			$defaultModeList += "|^cmp$|^fipsinstall$|^info$|^kdf$|^mac$"
 		}
@@ -497,8 +497,12 @@ if (Get-Command openssl -CommandType Application -EA SilentlyContinue) {
 			$script:OpenSSLVersion = "3.x"
 			break
 		}
+		"OpenSSL 3.4.*" {
+			$script:OpenSSLVersion = "3.x"
+			break
+		}
 		default {
-			Write-Error "Could not determine OpenSSL version or version is not 1.1, 3.0 - 3.3: $openSSLVersionString"
+			Write-Error "Could not determine OpenSSL version or version is not 1.1, 3.0 - 3.4: $openSSLVersionString"
 			return
 		}
 	}

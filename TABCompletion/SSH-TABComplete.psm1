@@ -20,7 +20,7 @@ Where do I get the latest version?
 https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
 
 When was this file updated?
-2021-05-22
+2024-11-05
 #>
 
 <#
@@ -28,15 +28,22 @@ When was this file updated?
     Returns all hosts defined in the config file,
     ignoring hostnames that describe multiple hosts or
     exclude hosts
+    .PARAMETER configFile
+    The config file to look in
 #>
 function Get-SSHConfigHosts {
-    $fileContent = Get-Content ($env:userprofile + "\.ssh\config")
+    param (
+        [String][Parameter(Mandatory=$true)] $configFile
+    )
     $configHosts = @()
-    foreach ($line in $fileContent) {
-        if ($line -match '^Host\s+(.*)$') {
-			$hosts = ($matches[1] | Select-String -allMatches '([^\s]+)').matches
-			for ($i=0; $i -lt $hosts.length; $i++) {
-				if ($hosts[$i].Value -notmatch '[\*|\?|/|!]') { $configHosts += $hosts[$i].Value }
+    if (Test-Path -PathType Leaf $configFile) {
+        $fileContent = Get-Content $configFile
+        foreach ($line in $fileContent) {
+            if ($line -match '^Host\s+(.*)$') {
+                $hosts = ($matches[1] | Select-String -allMatches '([^\s]+)').matches
+                for ($i=0; $i -lt $hosts.length; $i++) {
+                    if ($hosts[$i].Value -notmatch '[\*|\?|/|!]') { $configHosts += $hosts[$i].Value }
+                }
             }
         }
     }
@@ -46,12 +53,19 @@ function Get-SSHConfigHosts {
 <#
     .DESCRIPTION
     Returns all hosts contained in the known_hosts file
+    .PARAMETER hostFile
+    The known_hosts file to look in
 #>
 function Get-SSHKnownHosts {
-    $fileContent = Get-Content ($env:userprofile + "\.ssh\known_hosts")
+    param (
+        [String][Parameter(Mandatory=$true)] $hostFile
+    )
     $knownHosts = @()
-    foreach ($line in $fileContent) {
-        if ($line -match '^([^\s,]*).*') { $knownHosts += $matches[1] }
+    if (Test-Path -PathType Leaf $hostFile) {
+        $fileContent = Get-Content ($env:userprofile + "\.ssh\known_hosts")
+        foreach ($line in $fileContent) {
+            if ($line -match '^([^\s,]*).*') { $knownHosts += $matches[1] }
+        }
     }
     return $knownHosts
 }
@@ -62,10 +76,15 @@ function Get-SSHKnownHosts {
 #>
 function Get-SSHHosts {
     $AllHosts = @()
-    $AllHosts += Get-SSHConfigHosts
-    foreach ($h in Get-SSHKnownHosts) {
-        if ($h -notin $AllHosts) { $Allhosts += $h }
-    }
+
+    $AllHosts += Get-SSHKnownHosts -hostFile (Join-Path $env:userProfile "\.ssh\known_hosts")
+    $AllHosts += Get-SSHKnownHosts -hostFile (Join-Path $env:userProfile "\.ssh\known_hosts2")
+    $AllHosts += Get-SSHKnownHosts -hostFile (Join-Path $env:allUsersProfile "\ssh\ssh_known_hosts")
+    $AllHosts += Get-SSHKnownHosts -hostFile (Join-Path $env:allUsersProfile "\ssh\ssh_known_hosts2")
+
+    $AllHosts += Get-SSHConfigHosts -configFile (Join-Path $env:userProfile "\.ssh\config")
+    $AllHosts += Get-SSHConfigHosts -configFile (Join-Path $env:allUsersProfile "\ssh\ssh_config")
+
     return ($AllHosts  | Sort-Object -CaseSensitive -Unique)
 }
 
@@ -198,9 +217,10 @@ function Add-SSHTabCompletion {
             @{"Param"="-n"; "ShortDesc"="-n (redirect null)"; "LongDesc"="Redirect stdIn from /dev/null"},
             @{"Param"="-O"; "ShortDesc"="-O (ctrl <cmd>)"; "LongDesc"="Specify command to control an active connection master process"},
             @{"Param"="-o"; "ShortDesc"="-o (<options>)"; "LongDesc"="Specify options to use like in the config file"},
+            @{"Param"="-P"; "ShortDesc"="-P (<tag>)"; "LongDesc"="Specify a tag name to select configuration"},
             @{"Param"="-p"; "ShortDesc"="-p (<port>)"; "LongDesc"="Specify port to connect to"},
-            @{"Param"="-q"; "ShortDesc"="-q (quiet)"; "LongDesc"="Quiet mode"},
             @{"Param"="-Q"; "ShortDesc"="-Q (query <option>)"; "LongDesc"="Specify option to query available values"},
+            @{"Param"="-q"; "ShortDesc"="-q (quiet)"; "LongDesc"="Quiet mode"},
             @{"Param"="-R"; "ShortDesc"="-R (rev fwd conn <p:h:p>)"; "LongDesc"="Specify [bindAddress:]port:host:port to forward from host:port to local port"},
             @{"Param"="-S"; "ShortDesc"="-S (ctl <socket>)"; "LongDesc"="Specify a socket for connection sharing"},
             @{"Param"="-s"; "ShortDesc"="-s (subsystem)"; "LongDesc"="Use a subsystem on the remote machine"},

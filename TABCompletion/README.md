@@ -12,6 +12,9 @@ The PowerShell modules provide command completion for classic executables in Pow
 ## SSH
 SSH-TABComplete.psm1 supports command completion for SSH parameters and known hosts, e.g. hosts in the known_hosts file (the hosts, you've public keys for) and your SSH config
 
+## SCP
+SCP-TABComplete.psm1 supports command completion for SCP parameters and known hosts, e.g. hosts in the known_hosts file (the hosts, you've public keys for) and your SSH config
+
 ## OpenSSL
 OpenSSL-TABComplete.psm1 supports command completion for OpenSSL commands.
 It's important to have the OpenSSL executable in your path, at OpenSSL commands are used to dynamically generate the help content.

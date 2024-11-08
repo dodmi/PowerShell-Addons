@@ -1,26 +1,26 @@
 <#
 What is this?
-This is a PowerShell module providing TAB completion for the native ssh command
+This is a PowerShell module providing TAB completion for the native scp command
 
 How to use this file alone?
-- Put the path to ssh executable to your path variable (SSH NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
+- Put the path to scp and ssh executable to your path variable (SSH and SCP NEED TO BE EXECUTABLE FROM ANY LOCATION)
 - Run $env:PSModulePath in PowerShell
-- Place this file in one of the module locations in a sub folder named SSH-TABComplete
-- Run import-module SSH-TABComplete (to get this permanently, add the line to your $profile)
-- Now you should have tab completion for ssh parameters (enter ssh <TAB> or ssh <Ctrl+Space>)
+- Place this file in one of the module locations in a sub folder named SCP-TABComplete
+- Run import-module SCP-TABComplete (to get this permanently, add the line to your $profile)
+- Now you should have tab completion for scp parameters (enter scp <TAB> or scp <Ctrl+Space>)
 
 How to use this file in the bundle?
-- Put the path to ssh executable to your path variable (SSH NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
+- Put the path to scp and ssh executable to your path variable (SSH and SCP NEED TO BE EXECUTABLE FROM ANY LOCATION)
 - Run $env:PSModulePath in PowerShell
 - Place this file and the file TABCompletion.psm1 in one of the module locations in a sub folder named TABCompletion
 - Run import-module TABCompletion (to get this permanently, add the line to your $profile)
-- Now you should have tab completion for ssh parameters (enter ssh <TAB> or ssh <Ctrl+Space>)
+- Now you should have tab completion for scp parameters (enter scp <TAB> or scp <Ctrl+Space>)
 
 Where do I get the latest version?
 https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
 
 When was this file updated?
-2024-11-05
+2024-11-08
 #>
 
 <#
@@ -86,18 +86,6 @@ function Get-SSHHosts {
     $AllHosts += Get-SSHConfigHosts -configFile (Join-Path $env:allUsersProfile "\ssh\ssh_config")
 
     return ($AllHosts  | Sort-Object -CaseSensitive -Unique)
-}
-
-<#
-    .DESCRIPTION
-    Returns the active local IPs
-#>
-function Get-ActiveIPs {
-    $assignedIPs = @()
-    foreach ($ip in $(Get-NetIPAddress | ? {($_.AddressState -like "Preferred") -and ($_.IPAddress -notmatch "(127.0.0.1|::1)")} | Select -ExpandProperty IPAddress)) {
-        $assignedIPs += $ip
-    }
-    return $assignedIPs
 }
 
 <#
@@ -177,11 +165,11 @@ function Get-LeftCommandLineElement {
 
 <#
     .DESCRIPTION
-    Finally implements the completion logic and registers the SSH command completor
+    Finally implements the completion logic and registers the SCP command completor
 #>
-function Add-SSHTabCompletion {
+function Add-SCPTabCompletion {
     # Command to complete
-	$script:cmd = @("ssh","ssh.exe")
+	$script:cmd = @("scp","scp.exe")
 
     # Logic to compare input and present results
     $script:completionScriptBlock = {
@@ -189,56 +177,29 @@ function Add-SSHTabCompletion {
 
         # Parameter list
         $simpleParams = @(
+            @{"Param"="-3"; "ShortDesc"="-3 (copy through localhost)"; "LongDesc"="Copies files between two remote hosts through localhost"},
             @{"Param"="-4"; "ShortDesc"="-4 (IPv4 mode)"; "LongDesc"="Force IPv4 connection"},
             @{"Param"="-6"; "ShortDesc"="-6 (IPv6 mode)"; "LongDesc"="Force IPv6 connection"},
             @{"Param"="-A"; "ShortDesc"="-A (agent)"; "LongDesc"="Forward using connection agent"},
-            @{"Param"="-a"; "ShortDesc"="-a (no agent)"; "LongDesc"="Disables agent forwarding"},
-            @{"Param"="-B"; "ShortDesc"="-B (bind <if>)"; "LongDesc"="Specify interface to bind to"},
-            @{"Param"="-b"; "ShortDesc"="-b (bind <addr>)"; "LongDesc"="Specify address to bind to"},
+            @{"Param"="-B"; "ShortDesc"="-B (batch mode)"; "LongDesc"="Use batch mode, don't ask for passwords"},
             @{"Param"="-C"; "ShortDesc"="-C (compression)"; "LongDesc"="Enable data compression"},
             @{"Param"="-c"; "ShortDesc"="-c (<ciphers>)"; "LongDesc"="Specify comma separated list of allowed ciphers"},
-            @{"Param"="-D"; "ShortDesc"="-D (dyn fwd <port>)"; "LongDesc"="Specify [bindAddress:]port to dynamically forward connections, made to this port"},
-            @{"Param"="-E"; "ShortDesc"="-E (log <file>)"; "LongDesc"="Specify log file to use"},
-            @{"Param"="-e"; "ShortDesc"="-e (esc <char>)"; "LongDesc"="Specify the escape char to use"},
+            @{"Param"="-D"; "ShortDesc"="-D (local SFTP)"; "LongDesc"="Connect directly to a local SFTP server"},
             @{"Param"="-F"; "ShortDesc"="-F (config <file>)"; "LongDesc"="Specify config file to use"},
-            @{"Param"="-f"; "ShortDesc"="-f (fall to bg)"; "LongDesc"="Fall to background before command execution"},
-            @{"Param"="-G"; "ShortDesc"="-G (print config)"; "LongDesc"="Print configuration"},
-            @{"Param"="-g"; "ShortDesc"="-g (fwd ports)"; "LongDesc"="Allow local port forwarding"},
-            @{"Param"="-I"; "ShortDesc"="-I (PKCS#11 <lib>)"; "LongDesc"="Specify PKCS#11 lib to use"},
             @{"Param"="-i"; "ShortDesc"="-i (id <file>)"; "LongDesc"="Specify id file to use"},
             @{"Param"="-J"; "ShortDesc"="-J (jump <addr>)"; "LongDesc"="Specify jump host, used to connect to target"},
-            @{"Param"="-K"; "ShortDesc"="-K (GSSAPI)"; "LongDesc"="Enable GSSAPI authentication"},
-            @{"Param"="-k"; "ShortDesc"="-k (no GSSAPI)"; "LongDesc"="Disable GSSAPI authentication"},
-            @{"Param"="-L"; "ShortDesc"="-L (fwd conn <p:h:p>)"; "LongDesc"="Specify [bindAddress:]port:host:port to forward from local port to host:port"},
-            @{"Param"="-l"; "ShortDesc"="-l (login <user>)"; "LongDesc"="Specify login name"},
-            @{"Param"="-M"; "ShortDesc"="-M (master)"; "LongDesc"="Master mode for connection sharing"},
-            @{"Param"="-m"; "ShortDesc"="-m (MAC <algos>)"; "LongDesc"="Specify comma separated list of MAC algorithms"},
-            @{"Param"="-N"; "ShortDesc"="-N (no rem cmd)"; "LongDesc"="No execution of remote commands"},
-            @{"Param"="-n"; "ShortDesc"="-n (redirect null)"; "LongDesc"="Redirect stdIn from /dev/null"},
-            @{"Param"="-O"; "ShortDesc"="-O (ctrl <cmd>)"; "LongDesc"="Specify command to control an active connection master process"},
-            @{"Param"="-o"; "ShortDesc"="-o (<option>)"; "LongDesc"="Specify an option to use like in the config file, may be used multiple times"},
-            @{"Param"="-P"; "ShortDesc"="-P (<tag>)"; "LongDesc"="Specify a tag name to select configuration"},
-            @{"Param"="-p"; "ShortDesc"="-p (<port>)"; "LongDesc"="Specify port to connect to"},
-            @{"Param"="-Q"; "ShortDesc"="-Q (query <option>)"; "LongDesc"="Specify option to query available values"},
+            @{"Param"="-l"; "ShortDesc"="-l (<limit>)"; "LongDesc"="Limit bandwith in Kbit/s"},
+            @{"Param"="-O"; "ShortDesc"="-O (legacy mode)"; "LongDesc"="Use the legacy scp protocol"},
+            @{"Param"="-o"; "ShortDesc"="-o (SSH <option>)"; "LongDesc"="Specify an option to use like in the config file, may be used multiple times"},
+            @{"Param"="-P"; "ShortDesc"="-P (<port>)"; "LongDesc"="Specify port to connect to"},
+            @{"Param"="-p"; "ShortDesc"="-p (preserve)"; "LongDesc"="Preserve file timestamps and mode bits"},
             @{"Param"="-q"; "ShortDesc"="-q (quiet)"; "LongDesc"="Quiet mode"},
-            @{"Param"="-R"; "ShortDesc"="-R (rev fwd conn <p:h:p>)"; "LongDesc"="Specify [bindAddress:]port:host:port to forward from host:port to local port"},
-            @{"Param"="-S"; "ShortDesc"="-S (ctl <socket>)"; "LongDesc"="Specify a socket for connection sharing"},
-            @{"Param"="-s"; "ShortDesc"="-s (subsystem)"; "LongDesc"="Use a subsystem on the remote machine"},
-            @{"Param"="-T"; "ShortDesc"="-T (no term)"; "LongDesc"="Disable pseudo terminal"},
-            @{"Param"="-t"; "ShortDesc"="-t (term)"; "LongDesc"="Force pseudo terminal"},
-            @{"Param"="-V"; "ShortDesc"="-V (version)"; "LongDesc"="Display version"},
+            @{"Param"="-R"; "ShortDesc"="-R (from remote)"; "LongDesc"="Using scp on the remote origin to copy to the remote target"},
+            @{"Param"="-S"; "ShortDesc"="-S (ssh <file>)"; "LongDesc"="Specify an alternate SSH (compatible) executable"},
+            @{"Param"="-T"; "ShortDesc"="-T (no name checks)"; "LongDesc"="Disable filename checking"},
             @{"Param"="-v"; "ShortDesc"="-v (verbose)"; "LongDesc"="Print debug messages"},
-            @{"Param"="-W"; "ShortDesc"="-W (fwd in/out <h:p>)"; "LongDesc"="Specify host:port to forward stdIn and stdOut to"},
-            @{"Param"="-w"; "ShortDesc"="-w (<tun> fwd)"; "LongDesc"="Specify localTun[:remoteTun] to forward through localTun device"},
-            @{"Param"="-X"; "ShortDesc"="-X (X11 fwd)"; "LongDesc"="Enable X11 forwarding"},
-            @{"Param"="-x"; "ShortDesc"="-x (no X11 fwd)"; "LongDesc"="Disable X11 forwarding"},
-            @{"Param"="-Y"; "ShortDesc"="-Y (trusted X11 fwd)"; "LongDesc"="Enable trusted X11 forwarding"},
-            @{"Param"="-y"; "ShortDesc"="-y (use syslog)"; "LongDesc"="Write errors to syslog instead of stdErr"}
+            @{"Param"="-X"; "ShortDesc"="-X (SFTP <option>)"; "LongDesc"="Specify an option to pass to SFTP, may be used multiple times"}
         )
-
-        # Query options (for -Q)
-        $queryOptions = "cipher", "cipher_auth", "help", "mac", "kex", "kex-gss", "key", "key-cert", "key-plain", "key-sig", "protocol-version", "sig"
-        $sshOptions = "AddKeysToAgent=", "AddressFamily=", "BatchMode=", "BindAddress=", "CanonicalDomains=", "CanonicalizeFallbackLocal=", "CanonicalizeHostname=", "CanonicalizeMaxDots=", "CanonicalizePermittedCNAMEs=", "CASignatureAlgorithms=", "CertificateFile=", "CheckHostIP=", "Ciphers=", "ClearAllForwardings=", "Compression=", "ConnectionAttempts=", "ConnectTimeout=", "ControlMaster=", "ControlPath=", "ControlPersist=", "DynamicForward=", "EnableEscapeCommandline=", "EscapeChar=", "ExitOnForwardFailure=", "FingerprintHash=", "ForkAfterAuthentication=", "ForwardAgent=", "ForwardX11=", "ForwardX11Timeout=", "ForwardX11Trusted=", "GatewayPorts=", "GlobalKnownHostsFile=", "GSSAPIAuthentication=", "GSSAPIKeyExchange=", "GSSAPIClientIdentity=", "GSSAPIDelegateCredentials=", "GSSAPIKexAlgorithms=", "GSSAPIRenewalForcesRekey=", "GSSAPIServerIdentity=", "GSSAPITrustDns=", "HashKnownHosts=", "Host=", "HostbasedAcceptedAlgorithms=", "HostbasedAuthentication=", "HostKeyAlgorithms=", "HostKeyAlias=", "Hostname=", "IdentitiesOnly=", "IdentityAgent=", "IdentityFile=", "IPQoS=", "KbdInteractiveAuthentication=", "KbdInteractiveDevices=", "KexAlgorithms=", "KnownHostsCommand=", "LocalCommand=", "LocalForward=", "LogLevel=", "MACs=", "Match=", "NoHostAuthenticationForLocalhost=", "NumberOfPasswordPrompts=", "PasswordAuthentication=", "PermitLocalCommand=", "PermitRemoteOpen=", "PKCS11Provider=", "Port=", "PreferredAuthentications=", "ProxyCommand=", "ProxyJump=", "ProxyUseFdpass=", "PubkeyAcceptedAlgorithms=", "PubkeyAuthentication=", "RekeyLimit=", "RemoteCommand=", "RemoteForward=", "RequestTTY=", "RequiredRSASize=", "SendEnv=", "ServerAliveInterval=", "ServerAliveCountMax=", "SessionType=", "SetEnv=", "StdinNull=", "StreamLocalBindMask=", "StreamLocalBindUnlink=", "StrictHostKeyChecking=", "TCPKeepAlive=", "Tunnel=", "TunnelDevice=", "UpdateHostKeys=", "User=", "UserKnownHostsFile=", "VerifyHostKeyDNS=", "VisualHostKey=", "XAuthLocation="
 
         # Prepare known target hosts
         $hosts = @()
@@ -246,34 +207,29 @@ function Add-SSHTabCompletion {
             $hosts += @{"Param"=$h; "ShortDesc"=$h; "LongDesc"="Connect to target system $h"}
         }
 
+        $sshOptions = "AddressFamily=", "BatchMode=", "BindAddress=", "BindInterface=", "CanonicalDomains=", "CanonicalizeFallbackLocal=", "CanonicalizeHostname=", "CanonicalizeMaxDots=", "CanonicalizePermittedCNAMEs=", "CASignatureAlgorithms=", "CertificateFile=", "CheckHostIP=", "Ciphers=", "Compression=", "ConnectionAttempts=", "ConnectTimeout=", "ControlMaster=", "ControlPath=", "ControlPersist=", "GlobalKnownHostsFile=", "GSSAPIAuthentication=", "GSSAPIDelegateCredentials=", "HashKnownHosts=", "Host=", "HostbasedAcceptedAlgorithms=", "HostbasedAuthentication=", "HostKeyAlgorithms=", "HostKeyAlias=", "Hostname=", "IdentitiesOnly=", "IdentityAgent=", "IdentityFile=", "IPQoS=", "KbdInteractiveAuthentication=", "KbdInteractiveDevices=", "KexAlgorithms=", "KnownHostsCommand=", "LogLevel=", "MACs=", "NoHostAuthenticationForLocalhost=", "NumberOfPasswordPrompts=", "PasswordAuthentication=", "PKCS11Provider=", "Port=", "PreferredAuthentications=", "ProxyCommand=", "ProxyJump=", "PubkeyAcceptedAlgorithms=", "PubkeyAuthentication=", "RekeyLimit=", "RequiredRSASize=", "SendEnv=", "ServerAliveInterval=", "ServerAliveCountMax=", "SetEnv=", "StrictHostKeyChecking=", "TCPKeepAlive=", "UpdateHostKeys=", "User=", "UserKnownHostsFile=", "VerifyHostKeyDNS="
+        $sftpOptions = "nrequests=", "buffer="
+
         switch -RegEx -CaseSensitive (Get-LeftCommandLineElement -cmdAst $commandAst -curPos $cursorPosition) {
-            "-b" {
-                $allResults = Get-ActiveIPs | ? { $_ -like "$wordToComplete*" }
+            "-F|-i|-S" {
+                $allResults = Complete-Files $wordToComplete
+                break
+            }
+            "-J" {
+                $allResults = @()
+                $allResults += $hosts | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
                 break
             }
             "-o" {
                 $allResults = $sshOptions | ? { $_ -like "$wordToComplete*" }
                 break
             }
-            "-Q" {
-                $allResults = $queryOptions | ? { $_ -like "$wordToComplete*" }
-                break
-            }
-            "-E|-F|-i" {
-                $allResults = Complete-Files $wordToComplete
-                break
-            }
-            "-J|-W" {
-                $allResults = @()
-                $allResults += $hosts | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
-                break
-            }
             "-c" {
                 $allResults = ssh -Q cipher | ? { $_ -like "$wordToComplete*" }
                 break
             }
-            "-m" {
-                $allResults = ssh -Q mac | ? { $_ -like "$wordToComplete*" }
+            "-X" {
+                $allResults = $sftpOptions | ? { $_ -like "$wordToComplete*" }
                 break
             }
             default {
@@ -318,10 +274,10 @@ function Add-SSHTabCompletion {
     }
 }
 
-if (Get-Command ssh -CommandType Application -EA SilentlyContinue) {
-	Add-SSHTabCompletion
+if ((Get-Command scp -CommandType Application -EA SilentlyContinue) -and (Get-Command ssh -CommandType Application -EA SilentlyContinue)) {
+	Add-SCPTabCompletion
 } else {
-	Write-Error "SSH was not found in your environment! Put it too path..."
+	Write-Error "SCP or SSH was not found in your environment! Put it too path..."
 }
 
 # Expose no functions

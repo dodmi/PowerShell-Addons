@@ -4,7 +4,7 @@ This is a PowerShell module providing TAB completion for the native openssl comm
 
 Are there any requirements?
 - PowerShell obviously
-- OpenSSL 1.1.*, 3.0.* - 3.4.* or 3.5
+- OpenSSL 1.1, 3.0 - 3.6
 
 How to use this file alone?
 - Put the path to openssl executable to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
@@ -24,7 +24,7 @@ Where do I get the latest version?
 https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
 
 When was this file updated?
-2025-04-21
+2025-10-22
 #>
 
 <#
@@ -288,6 +288,15 @@ function Add-OpenSSLTabCompletion {
 			$defaultModeList += "|^skeyutl$"
 		}
 
+		if ($script:OpenSSLVersion -like "3.6") {
+			$newModes = @(
+				@{"Param"="configutl"; "ShortDesc"="configutl"; "LongDesc"="Process OpenSSL configuration file"}
+			)
+
+			$modes += $newModes
+			$defaultModeList += "|^configutl$"
+		}
+
 		$mode = Get-OpenSSLMode $commandAst
         switch -RegEx ($mode) {
 			$defaultModeList {
@@ -429,12 +438,12 @@ function Add-OpenSSLTabCompletion {
 					}
 					"^-md$" {
 						$allResults = @()
-						$digests = openssl list -1 -digest-algorithms
-						for ($i=0; $i -lt $digests.count; $i++) {
-							if ($digests[$i].indexOf(" ") -gt 0) {
-								$digests[$i] = ($digests[$i].split(" "))[2]
-							}
-						}
+						$digests = openssl list -1 -digest-commands
+						$allResults = $digests | ? { $_ -like "$wordToComplete*" } | Sort-Object -Unique
+					}
+					"^-cipher$" {
+						$allResults = @()
+						$digests = openssl list -1 -cipher-commands
 						$allResults = $digests | ? { $_ -like "$wordToComplete*" } | Sort-Object -Unique
 					}
 					default {
@@ -443,10 +452,10 @@ function Add-OpenSSLTabCompletion {
 				}
 			}
 			"^help$" {
-				$allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
+				$allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | sort { $_.Param } | % { Create-CompletionResult @_ }
 			}
             default {
-                $allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
+                $allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | sort { $_.Param } | % { Create-CompletionResult @_ }
             }
         }
         return $allResults
@@ -514,8 +523,12 @@ if (Get-Command openssl -CommandType Application -EA SilentlyContinue) {
 			$script:OpenSSLVersion = "3.5"
 			break
 		}
+		"OpenSSL 3.6.*" {
+			$script:OpenSSLVersion = "3.6"
+			break
+		}
 		default {
-			Write-Error "Could not determine OpenSSL version or version is not 1.1, 3.0 - 3.4 or 3.5: $openSSLVersionString"
+			Write-Error "Could not determine OpenSSL version or version is not 1.1, 3.0 - 3.6: $openSSLVersionString"
 			return
 		}
 	}

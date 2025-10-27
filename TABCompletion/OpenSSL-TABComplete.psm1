@@ -114,7 +114,7 @@ function Get-OpenSSLOptions {
 		}
 		$options[$i] = "-" + $options[$i]
 	}
-	return $options
+	return $options | sort
 }
 
 $script:optionHelpTable = @{}

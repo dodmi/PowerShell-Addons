@@ -4,7 +4,7 @@ This is a PowerShell module providing TAB completion for the native openssl comm
 
 Are there any requirements?
 - PowerShell obviously
-- OpenSSL 1.1, 3.0 - 3.6
+- OpenSSL 1.1, 3.0 - 3.6 and 4.0
 
 How to use this file alone?
 - Put the path to openssl executable to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
@@ -24,14 +24,14 @@ Where do I get the latest version?
 https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
 
 When was this file updated?
-2025-10-22
+2026-04-18
 #>
 
 <#
     .DESCRIPTION
     Creates a result element from a string or a hash set containing an additional description
     .PARAMETER Param
-    The parameter to create the completion reult for (e.g. -p)
+    The parameter to create the completion result for (e.g. -p)
     .PARAMETER ShortDesc
     A short description to display in lists (e.g. -p (Print))
     .PARAMETER LongDesc
@@ -227,7 +227,6 @@ function Add-OpenSSLTabCompletion {
 			@{"Param"="ec"; "ShortDesc"="ec"; "LongDesc"="EC (Elliptic curve) key processing"},
 			@{"Param"="ecparam"; "ShortDesc"="ecparam"; "LongDesc"="EC parameter manipulation and generation"},
 			@{"Param"="enc"; "ShortDesc"="enc"; "LongDesc"="Encoding with Ciphers"},
-			@{"Param"="engine"; "ShortDesc"="engine"; "LongDesc"="Engine (loadable module) information and manipulation"},
 			@{"Param"="errstr"; "ShortDesc"="errstr"; "LongDesc"="Error Number to Error String Conversion"},
 			@{"Param"="gendsa"; "ShortDesc"="gendsa"; "LongDesc"="Generation of DSA Private Key from Parameters"},
 			@{"Param"="genpkey"; "ShortDesc"="genpkey"; "LongDesc"="Generation of Private Key or Parameters"},
@@ -264,9 +263,14 @@ function Add-OpenSSLTabCompletion {
 			@{"Param"="x509"; "ShortDesc"="x509"; "LongDesc"="X.509 Certificate Data Management"}
 		)
 
-		$defaultModeList = "^asn1parse$|^ca$|^ciphers$|^cms$|^crl$|^crl2pkcs7$|^dgst$|^dhparam$|^dsa$|^dsaparam$|^ec$|^ecparam$|^enc$|^engine$|^errstr$|^gendsa$|^genpkey$|^genrsa$|^list$|^nseq$|^ocsp$|^passwd$|^pkcs12$|^pkcs7$|^pkcs8$|^pkey$|^pkeyparam$|^pkeyutl$|^prime$|^rand$|^rehash$|^req$|^rsa$|^rsautl$|^s_client$|^s_server$|^s_time$|^sess_id$|^smime$|^speed$|^spkac$|^srp$|^storeutl$|^ts$|^verify$|^version$|^x509$"
+		if ($script:OpenSSLVersion -in ("1.1","3.x","3.5","3.6")) {
+			$newModes = @(
+				@{"Param"="engine"; "ShortDesc"="engine"; "LongDesc"="Engine (loadable module) information and manipulation"}
+			)
+			$modes += $newModes
+		}
 
-		if ($script:OpenSSLVersion -in ("3.x","3.5")) {
+		if ($script:OpenSSLVersion -in ("3.x","3.5","3.6","4.x")) {
 			$newModes = @(
 				@{"Param"="cmp"; "ShortDesc"="cmp"; "LongDesc"="Certificate Management Protocol (CMP, RFC 4210) application"},
 				@{"Param"="fipsinstall"; "ShortDesc"="fipsinstall"; "LongDesc"="Perform FIPS configuration installation"},
@@ -274,28 +278,32 @@ function Add-OpenSSLTabCompletion {
 				@{"Param"="kdf"; "ShortDesc"="kdf"; "LongDesc"="Perform Key Derivation Function operations"},
 				@{"Param"="mac"; "ShortDesc"="mac"; "LongDesc"="Perform Message Authentication Code operations"}
 			)
-
 			$modes += $newModes
-			$defaultModeList += "|^cmp$|^fipsinstall$|^info$|^kdf$|^mac$"
 		}
 
-		if ($script:OpenSSLVersion -like "3.5") {
+		if ($script:OpenSSLVersion -in ("3.5","3.6","4.x")) {
 			$newModes = @(
 				@{"Param"="skeyutl"; "ShortDesc"="skeyutl"; "LongDesc"="Opaque symmetric keys routines"}
 			)
-
 			$modes += $newModes
-			$defaultModeList += "|^skeyutl$"
 		}
 
-		if ($script:OpenSSLVersion -like "3.6") {
+		if ($script:OpenSSLVersion -in ("3.6","4.x")) {
 			$newModes = @(
 				@{"Param"="configutl"; "ShortDesc"="configutl"; "LongDesc"="Process OpenSSL configuration file"}
 			)
-
 			$modes += $newModes
-			$defaultModeList += "|^configutl$"
 		}
+
+		if ($script:OpenSSLVersion -in ("4.x")) {
+			$newModes = @(
+				@{"Param"="ech"; "ShortDesc"="ech"; "LongDesc"="Generate Encrypted Client Hello (ECH) key pairs"}
+			)
+			$modes += $newModes
+		}
+
+		$modes = $modes | sort { $_.Param }
+		$defaultModeList = "^" + ($modes.Param -join "$|^") + "$"
 
 		$mode = Get-OpenSSLMode $commandAst
         switch -RegEx ($mode) {
@@ -360,7 +368,7 @@ function Add-OpenSSLTabCompletion {
 							}
 						}
 					}
-					"^-CA$|^-cafile$|^-CAfile$|^-CAkey$|^-CAserial$|^-cert_chain$|^-cert2$|^-certfile$|^-certsout$|^-chain$|^-chainCAfile$|^-config$|^-content$|^-CRL$|^-CRLfile$|^-ctlogfile$|^-data$|^-dcert$|^-dcert_chain$|^-dhparam$|^-dkey$|^-extfile$|^-force_pubkey$|^-genconf$|^-gendelta$|^-in$|^-index$|^-inkey$|^-key2$|^-keyfile$|^-keylogfile$|^-kfile$|^-keyout$|^-msgfile$|^-oid$|^-out$|^-paramfile$|^-peerkey$|^-prverify$|^-psk_session$|^-queryfile$|^-rand$|^-recip$|^-reqin$|^-reqout$|^-requestCAfile$|^-respin$|^-respout$|^-revoke$|^-rkey$|^-rother$|^-rsigner$|^-sess_in$|^-sess_out$|^-sigfile$|^-sign_other$|^-signer$|^-signkey$|^-srpvfile$|^-ss_cert$|^-ssl_config$|^-status_file$|^-trusted$|^-untrusted$|^-VAfile$|^-verify_other$|^-verify_receipt$|^-verifyCAfile$|^-writerand$|^-xcert$|^-xchain$|^-xkey$" {
+					"^-CA$|^-CAfile$|^-CAkey$|^-CAserial$|^-cert_chain$|^-cert2$|^-certfile$|^-certsout$|^-chain$|^-chainCAfile$|^-config$|^-content$|^-CRL$|^-CRLfile$|^-ctlogfile$|^-data$|^-dcert$|^-dcert_chain$|^-dhparam$|^-dkey$|^-expected-rpks$|^-extfile$|^-force_pubkey$|^-genconf$|^-gendelta$|^-in$|^-index$|^-inkey$|^-key2$|^-keyfile$|^-keylogfile$|^-kfile$|^-keyout$|^-msgfile$|^-oid$|^-out$|^-paramfile$|^-peerkey$|^-prverify$|^-psk_session$|^-queryfile$|^-rand$|^-recip$|^-reqin$|^-reqout$|^-requestCAfile$|^-respin$|^-respout$|^-revoke$|^-rkey$|^-rother$|^-rsigner$|^-sess_in$|^-sess_out$|^-sigfile$|^-sign_other$|^-signer$|^-signkey$|^-srpvfile$|^-ss_cert$|^-ssl_config$|^-status_file$|^-trusted$|^-untrusted$|^-VAfile$|^-verify_other$|^-verify_receipt$|^-verifyCAfile$|^-writerand$|^-xcert$|^-xchain$|^-xkey$" {
 						$allResults = Complete-Files $wordToComplete
 					}
 					"^-CApath$|^-chainCApath$|^-outdir$|^-verifyCApath$" {
@@ -452,10 +460,10 @@ function Add-OpenSSLTabCompletion {
 				}
 			}
 			"^help$" {
-				$allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | sort { $_.Param } | % { Create-CompletionResult @_ }
+				$allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
 			}
             default {
-                $allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | sort { $_.Param } | % { Create-CompletionResult @_ }
+                $allResults = $modes | ? { $_.Param -like "$wordToComplete*" } | % { Create-CompletionResult @_ }
             }
         }
         return $allResults
@@ -527,8 +535,12 @@ if (Get-Command openssl -CommandType Application -EA SilentlyContinue) {
 			$script:OpenSSLVersion = "3.6"
 			break
 		}
+		"OpenSSL 4.0.*" {
+			$script:OpenSSLVersion = "4.x"
+			break
+		}
 		default {
-			Write-Error "Could not determine OpenSSL version or version is not 1.1, 3.0 - 3.6: $openSSLVersionString"
+			Write-Error "Could not determine OpenSSL version or version is not 1.1, 3.0 - 3.6, 4.0: $openSSLVersionString"
 			return
 		}
 	}

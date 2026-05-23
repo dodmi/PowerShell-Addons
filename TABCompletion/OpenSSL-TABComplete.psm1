@@ -1,43 +1,50 @@
 ﻿<#
-What is this?
-This is a PowerShell module providing TAB completion for the native openssl command
+ .SYNOPSIS
+	Provide tab completion for OpenSSL command
 
-Are there any requirements?
-- PowerShell obviously
-- OpenSSL 1.1, 3.0 - 3.6 and 4.0
+ .DESCRIPTION
+	A PowerShell module providing TAB completion for the native OpenSSL command
 
-How to use this file alone?
-- Put the path to openssl executable to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
-- Run $env:PSModulePath in PowerShell
-- Place this file in one of the module locations in a sub folder named OpenSSL-TABComplete
-- Run import-module OpenSSL-TABComplete (to get this permanently, add the line to your $profile)
-- Now you should have tab completion for openssl parameters (enter openssl <TAB> or openssl <Ctrl+Space>)
+ .NOTES
+	Are there any requirements?
+	- PowerShell obviously
+	- OpenSSL 1.1, 3.0 - 3.6 and 4.0
 
-How to use this file in the bundle?
-- Put the path to openssl executable to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
-- Run $env:PSModulePath in PowerShell
-- Place this file and the file TABCompletion.psm1 in one of the module locations in a sub folder named TABCompletion
-- Run import-module TABCompletion (to get this permanently, add the line to your $profile)
-- Now you should have tab completion for openssl parameters (enter openssl <TAB> or openssl <Ctrl+Space>)
+	How to use this file alone?
+	- Put the path to openssl executable to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
+	- Run $env:PSModulePath in PowerShell
+	- Place this file in one of the module locations in a sub folder named OpenSSL-TABComplete
+	- Run import-module OpenSSL-TABComplete (to get this permanently, add the line to your $profile)
+	- Now you should have tab completion for openssl parameters (enter openssl <TAB> or openssl <Ctrl+Space>)
 
-Where do I get the latest version?
-https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
+	How to use this file in the bundle?
+	- Put the path to openssl executable to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
+	- Run $env:PSModulePath in PowerShell
+	- Place this file and the file TABCompletion.psm1 in one of the module locations in a sub folder named TABCompletion
+	- Run import-module TABCompletion (to get this permanently, add the line to your $profile)
+	- Now you should have tab completion for openssl parameters (enter openssl <TAB> or openssl <Ctrl+Space>)
 
-When was this file updated?
-2026-04-18
+	Where do I get the latest version?
+	https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
+
+	When was this file updated?
+	2026-05-23
 #>
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
+	Create a completion result
+ .DESCRIPTION
 	Creates a result element from a string or a hash set containing an additional description
-	.PARAMETER Param
+ .PARAMETER Param
 	The parameter to create the completion result for (e.g. -p)
-	.PARAMETER ShortDesc
+ .PARAMETER ShortDesc
 	A short description to display in lists (e.g. -p (Print))
-	.PARAMETER LongDesc
+ .PARAMETER LongDesc
 	A long description to display as hint (e.g. Print the file)
 #>
 function New-CompletionResult {
+	[OutputType([System.Management.Automation.CompletionResult])]
 	param(
 		[ValidateNotNullOrEmpty()][String] $Param,
 		[ValidateNotNullOrEmpty()][String] $ShortDesc,
@@ -50,14 +57,17 @@ function New-CompletionResult {
 }
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
+	Get the element left of the cursor
+ .DESCRIPTION
 	Gets the element to the left of the cursor
-	.PARAMETER cmdAst
+ .PARAMETER cmdAst
 	The command structure as provided in Register-ArgumentCompleter
-	.PARAMETER curPos
+ .PARAMETER curPos
 	The cursor position as provided in Register-ArgumentCompleter
 #>
 function Get-LeftCommandLineElement {
+	[OutputType([String])]
 	param(
 		[System.Management.Automation.Language.CommandAst] $cmdAst,
 		[int] $curPos
@@ -81,12 +91,15 @@ function Get-LeftCommandLineElement {
 }
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
+	Gets the OpenSSL mode
+ .DESCRIPTION
 	Gets the OpenSSL mode (first argument)
-	.PARAMETER cmdAst
+ .PARAMETER cmdAst
 	The command structure as provided in Register-ArgumentCompleter
 #>
 function Get-OpenSSLMode {
+	[OutputType([String])]
 	param(
 		[System.Management.Automation.Language.CommandAst] $cmdAst
 	)
@@ -100,12 +113,15 @@ function Get-OpenSSLMode {
 }
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
+	Get parameters for a OpenSSL mode
+ .DESCRIPTION
 	Provides an option list, that was retrieved from openssl list -1 -options <mode>
-	.PARAMETER Mode
+ .PARAMETER Mode
 	The OpenSSL mode to get the options for
 #>
 function Get-OpenSSLOption {
+	[OutputType([String[]])]
 	param( [String] $Mode )
 	$options = openssl list -1 -options $Mode
 	for ($i = 0; $i -lt $options.count; $i++) {
@@ -120,12 +136,15 @@ function Get-OpenSSLOption {
 $script:optionHelpTable = @{}
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
+	Return OpenSSL parameter description
+ .DESCRIPTION
 	Returns a short help for the provided option
-	.PARAMETER Option
+ .PARAMETER Option
 	The option, for which the help is needed
 #>
 function Get-OpenSSLOptionHelp {
+	[OutputType([String])]
 	param(
 		[String] $Option,
 		[String] $Mode
@@ -152,12 +171,15 @@ function Get-OpenSSLOptionHelp {
 }
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
+	List of files and folders to complete
+ .DESCRIPTION
 	Returns a list of file and folder names to complete
-	.PARAMETER wordToComplete
+ .PARAMETER wordToComplete
 	The text to filter the results for
 #>
 function Complete-File {
+	[OutputType([String[]])]
 	param ([String] $wordToComplete)
 	$currentPath = Get-Location | select -ExpandProperty Path
 	$result = @()
@@ -174,12 +196,15 @@ function Complete-File {
 }
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
 	Returns a list of folder names to complete
-	.PARAMETER wordToComplete
+ .DESCRIPTION
+	Returns a list of folder names to complete
+ .PARAMETER wordToComplete
 	The text to filter the results for
 #>
 function Complete-Folder {
+	[OutputType([String[]])]
 	param ([String] $wordToComplete)
 	$currentPath = Get-Location | select -ExpandProperty Path
 	$result = @()
@@ -196,16 +221,22 @@ function Complete-Folder {
 }
 
 <#
-	.DESCRIPTION
-	Finally defines and registers the OpenSSL command completor
+ .SYNOPSIS
+	OpenSSL command completer
+ .DESCRIPTION
+	Finally defines and registers the OpenSSL command completer
 #>
 function Add-OpenSSLTabCompletion {
+	[OutputType([System.void])]
+	param()
 
 	# Command to complete
 	$script:cmd = @("openssl", "openssl.exe")
 
 	# Logic to compare input and present results
 	$script:completionScriptBlock = {
+		[OutputType([System.Management.Automation.CompletionResult[]])]
+		[OutputType([String[]])]
 		param($wordToComplete, $commandAst, $cursorPosition)
 
 		# Parameter list (supported modes in OpenSSL 1.1)
@@ -477,7 +508,19 @@ function Add-OpenSSLTabCompletion {
 			Rename-Item "Function:\TabExpansion" "global:$($script:FuncBackupName)"
 		}
 
+		<#
+		 .SYNOPSIS
+			TabExpansion function
+		 .DESCRIPTION
+			This function extends the existing PowerShell TabExpansion function
+		 .PARAMETER line
+			The current command line in the shell
+		 .PARAMETER lastWord
+			The last word of the command line
+		#>
 		function global:TabExpansion {
+			[OutputType([System.Management.Automation.CompletionResult[]])]
+			[OutputType([String[]])]
 			param(
 				[String] $line,
 				[String] $lastWord

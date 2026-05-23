@@ -1,37 +1,44 @@
 ﻿<#
-What is this?
-This is a PowerShell module providing TAB completion for the native ssh command
+ .SYNOPSIS
+	Provide tab completion for SSH command
 
-How to use this file alone?
-- Put the path to ssh executable to your path variable (SSH NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
-- Run $env:PSModulePath in PowerShell
-- Place this file in one of the module locations in a sub folder named SSH-TABComplete
-- Run import-module SSH-TABComplete (to get this permanently, add the line to your $profile)
-- Now you should have tab completion for ssh parameters (enter ssh <TAB> or ssh <Ctrl+Space>)
+ .DESCRIPTION
+	A PowerShell module providing TAB completion for the native SSH command
 
-How to use this file in the bundle?
-- Put the path to ssh executable to your path variable (SSH NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
-- Run $env:PSModulePath in PowerShell
-- Place this file and the file TABCompletion.psm1 in one of the module locations in a sub folder named TABCompletion
-- Run import-module TABCompletion (to get this permanently, add the line to your $profile)
-- Now you should have tab completion for ssh parameters (enter ssh <TAB> or ssh <Ctrl+Space>)
+ .NOTES
+	How to use this file alone?
+	- Put the path to ssh executable to your path variable (SSH NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
+	- Run $env:PSModulePath in PowerShell
+	- Place this file in one of the module locations in a sub folder named SSH-TABComplete
+	- Run import-module SSH-TABComplete (to get this permanently, add the line to your $profile)
+	- Now you should have tab completion for ssh parameters (enter ssh <TAB> or ssh <Ctrl+Space>)
 
-Where do I get the latest version?
-https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
+	How to use this file in the bundle?
+	- Put the path to ssh executable to your path variable (SSH NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
+	- Run $env:PSModulePath in PowerShell
+	- Place this file and the file TABCompletion.psm1 in one of the module locations in a sub folder named TABCompletion
+	- Run import-module TABCompletion (to get this permanently, add the line to your $profile)
+	- Now you should have tab completion for ssh parameters (enter ssh <TAB> or ssh <Ctrl+Space>)
 
-When was this file updated?
-2024-11-05
+	Where do I get the latest version?
+	https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
+
+	When was this file updated?
+	2026-05-23
 #>
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
+	Returns a list of hosts, which have a defined configuration
+ .DESCRIPTION
 	Returns all hosts defined in the config file,
 	ignoring hostnames that describe multiple hosts or
 	exclude hosts
-	.PARAMETER configFile
+ .PARAMETER configFile
 	The config file to look in
 #>
 function Get-SSHConfigHost {
+	[OutputType([String[]])]
 	param (
 		[String][Parameter(Mandatory = $true)] $configFile
 	)
@@ -51,12 +58,15 @@ function Get-SSHConfigHost {
 }
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
+	Returns a list of known hosts from a file
+ .DESCRIPTION
 	Returns all hosts contained in the known_hosts file
-	.PARAMETER hostFile
+ .PARAMETER hostFile
 	The known_hosts file to look in
 #>
 function Get-SSHKnownHost {
+	[OutputType([String[]])]
 	param (
 		[String][Parameter(Mandatory = $true)] $hostFile
 	)
@@ -71,10 +81,15 @@ function Get-SSHKnownHost {
 }
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
+ 	Returns a list of all known hosts of the system
+ .DESCRIPTION
 	Returns a sorted, unique list of all known SSH hosts
 #>
 function Get-SSHHost {
+	[OutputType([String[]])]
+	param()
+
 	$AllHosts = @()
 
 	$AllHosts += Get-SSHKnownHost -hostFile (Join-Path $env:userProfile "\.ssh\known_hosts")
@@ -85,14 +100,19 @@ function Get-SSHHost {
 	$AllHosts += Get-SSHConfigHost -configFile (Join-Path $env:userProfile "\.ssh\config")
 	$AllHosts += Get-SSHConfigHost -configFile (Join-Path $env:allUsersProfile "\ssh\ssh_config")
 
-	return ($AllHosts  | Sort-Object -CaseSensitive -Unique)
+	return ($AllHosts | Sort-Object -CaseSensitive -Unique)
 }
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
+	Get IP addresses
+ .DESCRIPTION
 	Returns the active local IPs
 #>
 function Get-ActiveIP {
+	[OutputType([String[]])]
+	param()
+
 	$assignedIPs = @()
 	foreach ($ip in $(Get-NetIPAddress | ? { ($_.AddressState -like "Preferred") -and ($_.IPAddress -notmatch "(127.0.0.1|::1)") } | select -ExpandProperty IPAddress)) {
 		$assignedIPs += $ip
@@ -101,16 +121,19 @@ function Get-ActiveIP {
 }
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
+	Create a completion result
+ .DESCRIPTION
 	Creates a result element from a string or a hash set containing an additional description
-	.PARAMETER Param
-	The parameter to create the completion reult for (e.g. -p)
-	.PARAMETER ShortDesc
+ .PARAMETER Param
+	The parameter to create the completion result for (e.g. -p)
+ .PARAMETER ShortDesc
 	A short description to display in lists (e.g. -p (Print))
-	.PARAMETER LongDesc
+ .PARAMETER LongDesc
 	A long description to display as hint (e.g. Print the file)
 #>
 function New-CompletionResult {
+	[OutputType([System.Management.Automation.CompletionResult])]
 	param(
 		[ValidateNotNullOrEmpty()][String] $Param,
 		[ValidateNotNullOrEmpty()][String] $ShortDesc,
@@ -123,12 +146,15 @@ function New-CompletionResult {
 }
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
+	List of files and folders to complete
+ .DESCRIPTION
 	Returns a list of file and folder names to complete
-	.PARAMETER wordToComplete
+ .PARAMETER wordToComplete
 	The text to filter the results for
 #>
 function Complete-File {
+	[OutputType([String[]])]
 	param ([String] $wordToComplete)
 	$currentPath = Get-Location | select -ExpandProperty Path
 	$result = @()
@@ -145,14 +171,17 @@ function Complete-File {
 }
 
 <#
-	.DESCRIPTION
+ .SYNOPSIS
+	Get the element left of the cursor
+ .DESCRIPTION
 	Gets the element to the left of the cursor
-	.PARAMETER cmdAst
+ .PARAMETER cmdAst
 	The command structure as provided in Register-ArgumentCompleter
-	.PARAMETER curPos
+ .PARAMETER curPos
 	The cursor position as provided in Register-ArgumentCompleter
 #>
 function Get-LeftCommandLineElement {
+	[OutputType([String])]
 	param(
 		[System.Management.Automation.Language.CommandAst] $cmdAst,
 		[int] $curPos
@@ -176,10 +205,14 @@ function Get-LeftCommandLineElement {
 }
 
 <#
-	.DESCRIPTION
-	Finally implements the completion logic and registers the SSH command completor
+ .SYNOPSIS
+	SSH command completer
+ .DESCRIPTION
+	Finally implements the completion logic and registers the SSH command completer
 #>
 function Add-SSHTabCompletion {
+	[OutputType([System.void])]
+	param()
 	# Command to complete
 	$script:cmd = @("ssh", "ssh.exe")
 
@@ -299,7 +332,19 @@ function Add-SSHTabCompletion {
 			Rename-Item "Function:\TabExpansion" "global:$($script:FuncBackupName)"
 		}
 
+		<#
+		 .SYNOPSIS
+			TabExpansion function
+		 .DESCRIPTION
+			This function extends the existing PowerShell TabExpansion function
+		 .PARAMETER line
+			The current command line in the shell
+		 .PARAMETER lastWord
+			The last word of the command line
+		#>
 		function global:TabExpansion {
+			[OutputType([System.Management.Automation.CompletionResult[]])]
+			[OutputType([String[]])]
 			param(
 				[String] $line,
 				[String] $lastWord

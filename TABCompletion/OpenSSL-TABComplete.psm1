@@ -8,7 +8,7 @@
  .NOTES
 	Are there any requirements?
 	- PowerShell obviously
-	- OpenSSL 1.1, 3.0 - 3.6 and 4.0
+	- OpenSSL 1.1, 3.0 - 3.6, 4.0 - 4.1
 
 	How to use this file alone?
 	- Put the path to openssl executable to your path variable (OPENSSL NEEDS TO BE EXECUTABLE FROM ANY LOCATION)
@@ -28,7 +28,7 @@
 	https://github.com/dodmi/PowerShell-Addons/TABCompletion/tree/master/
 
 	When was this file updated?
-	2026-05-23
+	2026-10-24
 #>
 
 <#
@@ -578,8 +578,12 @@ if (Get-Command openssl -CommandType Application -EA SilentlyContinue) {
 			$script:OpenSSLVersion = "4.x"
 			break
 		}
+		"OpenSSL 4.1.*" {
+			$script:OpenSSLVersion = "4.x"
+			break
+		}
 		default {
-			Write-Error "Could not determine OpenSSL version or version is not 1.1, 3.0 - 3.6, 4.0: $openSSLVersionString"
+			Write-Error "Could not determine OpenSSL version or version is not 1.1, 3.0 - 3.6, 4.0 - 4.1: $openSSLVersionString"
 			return
 		}
 	}
